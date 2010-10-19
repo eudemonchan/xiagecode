@@ -95,6 +95,11 @@ namespace AccessDBTree
 
             MessageBox.Show(Encoding.ASCII.GetString(data));
         }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
     public class NameConverter : IValueConverter
