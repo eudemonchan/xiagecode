@@ -1,0 +1,270 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#include ""res\\TimberWolf.rc2""  // 非 Microsoft Visual C++ 编辑的资源\r\n"
+    "#include ""afxres.rc""     // 标准组件\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\TimberWolf.ico"
+IDI_ICON_HELLO          ICON                    "res\\icon1.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 175, 135
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 TimberWolf"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,77,77,21,21
+    LTEXT           "TimberWolf 1.0 版",IDC_STATIC,53,40,119,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2010",IDC_STATIC,53,55,119,8
+    DEFPUSHBUTTON   "确定",IDOK,122,118,50,14,WS_GROUP
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,3,115,168,1
+END
+
+IDD_TIMBERWOLF_DIALOG DIALOGEX 0, 0, 517, 369
+STYLE DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "TimberWolf"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_RICHEDIT_SEND,"RichEdit20A",ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP,3,295,361,47
+    PUSHBUTTON      "发送",IDC_SEND_MSG,315,343,50,23
+    PUSHBUTTON      "主菜单",IDC_MAIN,3,3,52,16,BS_FLAT,WS_EX_STATICEDGE
+    PUSHBUTTON      "文件共享列表",IDC_FILE_SHARE,278,3,87,16
+    CONTROL         "",IDC_RICHEDIT_GROUP,"RichEdit20A",ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP,3,20,363,171
+    LTEXT           "你对",IDC_STATIC,3,193,25,10
+    COMBOBOX        IDC_COMBO_SELECT_CHAT,29,192,120,140,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "说：",IDC_STATIC,150,193,25,10
+    CONTROL         "",IDC_RICHEDIT_PRIVATE,"RichEdit20A",ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP,3,205,362,65
+    PUSHBUTTON      "发送图片",IDC_SEND_PIC,3,271,62,23
+    PUSHBUTTON      "字体",IDC_SET_FONT,65,271,25,23
+    LTEXT           "定时滚动广告栏...",IDC_STATIC,3,352,149,14
+    PUSHBUTTON      "关闭",IDC_EXIT,277,350,34,16
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,368,3,4,363
+    LTEXT           "公告栏：",IDC_STATIC,375,3,67,9
+    CONTROL         "",IDC_RICHEDIT_PUBLIC,"RichEdit20A",ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP,374,13,140,91
+    LTEXT           "成员列表(200/200)：",IDC_STATIC,375,107,78,9
+    CONTROL         "",IDC_LIST_MEMBER,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,374,119,140,247
+END
+
+IDD_LOGON DIALOGEX 0, 0, 234, 98
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "  登录"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT4,56,36,111,14,ES_AUTOHSCROLL
+    LTEXT           "账号：",IDC_STATIC,15,37,38,11
+    EDITTEXT        IDC_EDIT1,56,52,111,14,ES_AUTOHSCROLL
+    LTEXT           "密码：",IDC_STATIC,15,55,38,11
+    CONTROL         "自动登录",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,61,81,48,10
+    CONTROL         "记住密码",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,115,81,48,10
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,169,3,1,92
+    DEFPUSHBUTTON   "登录",IDOK,171,37,60,32
+    PUSHBUTTON      "取消",IDCANCEL,203,73,28,23
+    LTEXT           "注册新账号",IDC_STATIC,173,3,48,12
+    LTEXT           "忘记密码？",IDC_STATIC,173,19,49,12
+    ICON            IDR_MAINFRAME,IDC_STATIC,17,11,21,20
+    ICON            IDI_ICON_HELLO,IDC_STATIC,80,10,21,20
+END
+
+IDD_FILE_SHARE DIALOGEX 0, 0, 284, 188
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "下载",IDOK,3,171,50,14
+    PUSHBUTTON      "退出",IDCANCEL,231,171,50,14
+    CONTROL         "",IDC_LIST_FILE_SHARE,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,3,3,278,167
+    PUSHBUTTON      "删除",IDC_DELETE_SHARE,155,171,50,14
+    PUSHBUTTON      "共享",IDC_SHARE,79,171,50,14
+END
+
+IDD_PIC_LIST DIALOGEX 0, 0, 242, 122
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_BORDER | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST_PIC,"SysListView32",LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,0,0,242,95
+    PUSHBUTTON      "Button1",IDC_BUTTON1,173,101,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080403a8"
+        BEGIN
+            VALUE "CompanyName", "TODO: <公司名>"
+            VALUE "FileDescription", "TODO: <文件说明>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "TimberWolf.exe"
+            VALUE "LegalCopyright", "TODO: (C) <公司名>。保留所有权利。"
+            VALUE "OriginalFilename", "TimberWolf.exe"
+            VALUE "ProductName", "TODO: <产品名>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 936
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 172
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 132
+    END
+
+    IDD_TIMBERWOLF_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 514
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 366
+    END
+
+    IDD_LOGON, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 231
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 95
+    END
+
+    IDD_FILE_SHARE, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 281
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 185
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_ABOUTBOX            "关于 TimberWolf(&A)..."
+END
+
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#pragma code_page(936)
+#include "res\TimberWolf.rc2"  // 非 Microsoft Visual C++ 编辑的资源
+#include "afxres.rc"     // 标准组件
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
