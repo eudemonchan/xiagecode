@@ -17,7 +17,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\..\bin"
+			OutputDirectory="..\..\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="2"
@@ -290,7 +290,7 @@
 			Name="global"
 			>
 			<File
-				RelativePath="..\..\..\..\include\global.h"
+				RelativePath="..\..\include\global.h"
 				>
 			</File>
 		</Filter>
@@ -298,11 +298,11 @@
 			Name="common"
 			>
 			<File
-				RelativePath="..\..\..\common\utility.cpp"
+				RelativePath="..\..\common\utility.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\common\utility.h"
+				RelativePath="..\..\common\utility.h"
 				>
 			</File>
 		</Filter>
