@@ -13,6 +13,7 @@
 
 #include "FileShareDlg.h"
 #include "PicListDlg.h"
+#include "SettingDlg.h"
 
 #define MEMBER_LIST_HEADER_COUNT 2
 #define MEMBER_LISTHEADER_CAPTION_USERNAME  L"用户名"
@@ -128,7 +129,7 @@ BOOL CTimberWolfDlg::OnInitDialog()
     m_pdlgPictureList = new CPicListDlg();
     m_pdlgPictureList->Create(IDD_PIC_LIST, this);
     //m_pdlgPictureList->ShowWindow(SW_HIDE);
-    ::SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_HIDEWINDOW);
+    ::SetWindowPos(m_pdlgPictureList->m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_HIDEWINDOW);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -291,7 +292,14 @@ void CTimberWolfDlg::OnBnClickedMain()
     switch (nCmd)
     {
     case 1: // 写成宏
-        AfxMessageBox(L"选项");
+        {
+            //AfxMessageBox(L"选项");
+            CSettingDlg dlgSetting;
+            if (dlgSetting.DoModal() == IDOK)
+            {
+                AfxMessageBox(L"设置已保存！");
+            }
+        }
         break;
 
     case 2:
