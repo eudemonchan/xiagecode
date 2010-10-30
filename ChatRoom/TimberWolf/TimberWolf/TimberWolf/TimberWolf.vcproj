@@ -20,7 +20,7 @@
 			OutputDirectory="..\..\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			UseOfMFC="2"
+			UseOfMFC="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -47,7 +47,7 @@
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -202,6 +202,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ResizableDialog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SeparatorStatic.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -229,6 +237,10 @@
 				RelativePath=".\TimberWolfDlg.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\xDialog.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -248,7 +260,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ResizableDialog.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SeparatorStatic.h"
 				>
 			</File>
 			<File
@@ -261,6 +281,10 @@
 			</File>
 			<File
 				RelativePath=".\TimberWolfDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\xDialog.h"
 				>
 			</File>
 		</Filter>

@@ -2,10 +2,14 @@
 //
 
 #pragma once
+#include "afxwin.h"
 
+//#include "ResizableDialog.h"
+#include "xDialog.h"
+#include "SeparatorStatic.h"
 
 // CTimberWolfDlg 对话框
-class CTimberWolfDlg : public CDialog
+class CTimberWolfDlg : public ClxDialog/*CDialog*/
 {
 // 构造
 public:
@@ -19,6 +23,9 @@ protected:
 
 protected:
     BOOL InitCtrl(void);
+
+protected:
+    CSeparatorStatic m_staticSeparator;
 
 // 实现
 protected:
@@ -42,6 +49,9 @@ public:
     afx_msg void OnBnClickedExit();
     afx_msg void OnBnClickedSendPic();
     afx_msg void OnBnClickedSetFont();
-public:
     afx_msg void OnNMRclickListMember(NMHDR *pNMHDR, LRESULT *pResult);
+    afx_msg void OnSize(UINT nType, int cx, int cy);
+    afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+public:
+    afx_msg void OnBnClickedSeparator();
 };

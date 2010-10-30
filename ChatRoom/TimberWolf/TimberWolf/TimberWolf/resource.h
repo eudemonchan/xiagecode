@@ -36,6 +36,7 @@
 #define IDC_BUTTON3                     1010
 #define IDC_SEND_PIC                    1010
 #define IDC_BUTTON4                     1011
+#define IDC_PANEL_SEPARATOR             1011
 #define IDC_BUTTON5                     1012
 #define IDC_SEND_MSG                    1012
 #define IDC_BUTTON6                     1013
@@ -43,8 +44,13 @@
 #define IDC_RICHEDIT_PUBLIC             1014
 #define IDC_MAIN                        1015
 #define IDC_BUTTON8                     1016
+#define IDC_STATIC_PUBLIC               1016
 #define IDC_BUTTON9                     1017
+#define IDC_STATIC_MEMBER_LIST          1017
+#define IDC_STATIC_YOU_TOWARD           1018
+#define IDC_STATIC_SAY                  1019
 #define IDC_RICHEDIT_SEND               1020
+#define IDC_STATIC_SCROLL_AD            1021
 
 // Next default values for new objects
 // 
@@ -52,7 +58,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1010
+#define _APS_NEXT_CONTROL_VALUE         1022
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
