@@ -60,6 +60,7 @@ CTimberWolfDlg::CTimberWolfDlg(CWnd* pParent /*=NULL*/)
 	: /*CDialog*/ClxDialog(CTimberWolfDlg::IDD, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+    m_pdlgPictureList = NULL;
 }
 
 void CTimberWolfDlg::DoDataExchange(CDataExchange* pDX)
@@ -68,7 +69,7 @@ void CTimberWolfDlg::DoDataExchange(CDataExchange* pDX)
     //DDX_Control(pDX, IDC_STATIC_SEPARATOR, m_staticSeparator);
 }
 
-BEGIN_MESSAGE_MAP(CTimberWolfDlg, CDialog)
+BEGIN_MESSAGE_MAP(CTimberWolfDlg, ClxDialog)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
@@ -85,6 +86,7 @@ BEGIN_MESSAGE_MAP(CTimberWolfDlg, CDialog)
     ON_WM_SIZE()
     ON_WM_ERASEBKGND()
     ON_BN_CLICKED(IDC_PANEL_SEPARATOR, &CTimberWolfDlg::OnBnClickedSeparator)
+    ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -122,6 +124,11 @@ BOOL CTimberWolfDlg::OnInitDialog()
         ::MessageBoxW(m_hWnd, L"初始化界面失败！", L"错误", MB_ICONERROR | MB_TOPMOST);
         CDialog::OnCancel();        
     }
+
+    m_pdlgPictureList = new CPicListDlg();
+    m_pdlgPictureList->Create(IDD_PIC_LIST, this);
+    //m_pdlgPictureList->ShowWindow(SW_HIDE);
+    ::SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_HIDEWINDOW);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -167,24 +174,6 @@ BOOL CTimberWolfDlg::InitCtrl(void)
 
     static DLGCTLINFO dcMenuGroup[] = 
     {
-//         //{ IDC_MAIN, MOVEX, 100 },
-//         { IDC_FILE_SHARE, MOVEX, 100 },
-//         { IDC_RICHEDIT_GROUP, ELASTICX, 100 },
-//         { IDC_RICHEDIT_PRIVATE, ELASTICX, 100 },
-//         { IDC_RICHEDIT_SEND, ELASTICX, 100 },
-// 
-//         { IDC_SEND_MSG, MOVEXY, 100 },
-//          { IDC_EXIT, MOVEXY, 100 },
-// 
-//         { IDC_PANEL_SEPARATOR, MOVEX & ELASTICY, 100 },
-//         { IDC_RICHEDIT_PUBLIC, MOVEX, 100 },
-//         { IDC_LIST_MEMBER, MOVEX & ELASTICY, 100 },
-// 
-//         { IDC_STATIC_PUBLIC, MOVEX, 100 },
-//         { IDC_STATIC_MEMBER_LIST, MOVEX, 100 }
-
-
-
         { IDC_FILE_SHARE, RLT_R, 100 },
         { IDC_RICHEDIT_GROUP, RLT_LTRB, 100 },
         { IDC_RICHEDIT_PRIVATE, RLT_LRB, 100 },
@@ -206,22 +195,8 @@ BOOL CTimberWolfDlg::InitCtrl(void)
         { IDC_COMBO_SELECT_CHAT, RLT_LB, 100 },
         { IDC_STATIC_SCROLL_AD, RLT_LB, 100 },
 
-
         { IDC_SEND_PIC, RLT_LB, 100 },
         { IDC_SET_FONT, RLT_LB, 100 }
-        //{ IDC_STATIC_MEMBER_LIST, RLT_R, 100 }
-
-//         { IDC_EDIT1, ELASTICX, 100 },
-//         { IDC_EDIT1, ELASTICY, 100 }
-        /*{IDC_EDIT2, ELASTICX, 50},
-        {IDC_EDIT3, ELASTICX, 50},
-        {IDC_EDIT3, MOVEX, 50},
-        {IDC_EDIT4, ELASTICY, 100},
-        {IDC_EDIT5, ELASTICX, 100},
-        {IDC_EDIT5, ELASTICY, 50},
-        {IDC_EDIT6, ELASTICX, 100},
-        {IDC_EDIT6, ELASTICY, 50},
-        {IDC_EDIT6, MOVEY, 50},*/
     };
 
     __super::SetControlProperty(dcMenuGroup, sizeof(dcMenuGroup) / sizeof(DLGCTLINFO));
@@ -324,7 +299,8 @@ void CTimberWolfDlg::OnBnClickedMain()
         break;
 
     case 3:
-        AfxMessageBox(L"退出");
+        //AfxMessageBox(L"退出");
+        PostQuitMessage(0);
         break;
     }
 }
@@ -347,8 +323,26 @@ void CTimberWolfDlg::OnBnClickedExit()
 
 void CTimberWolfDlg::OnBnClickedSendPic()
 {
-    CPicListDlg dlgPicList;
-    dlgPicList.DoModal();
+//     CPicListDlg dlgPicList;
+//     dlgPicList.DoModal();
+    assert(m_pdlgPictureList != NULL);
+
+    RECT rcList = { 0 };
+    m_pdlgPictureList->GetWindowRect(&rcList);
+
+    CWnd* pbtn = GetDlgItem(IDC_SEND_PIC);
+    assert(pbtn != NULL);
+
+    RECT rcSendPicBtn = { 0 };
+    pbtn->GetWindowRect(&rcSendPicBtn);
+    ScreenToClient(&rcSendPicBtn);
+
+    int nleft = rcSendPicBtn.left;
+    int nTop = rcSendPicBtn.top - RECT_H(rcList);
+
+    //::SetWindowPos(m_pdlgPictureList->m_hWnd, NULL, nleft, nTop, 0, 0, SWP_NOSIZE | SWP_SHOWWINDOW);
+    m_pdlgPictureList->MoveWindow(CRect(nleft, nTop, RECT_W(rcList), RECT_H(rcList)));
+    m_pdlgPictureList->ShowWindow(SW_SHOW);
 }
 
 void CTimberWolfDlg::OnBnClickedSetFont()
@@ -415,6 +409,8 @@ void CTimberWolfDlg::OnNMRclickListMember(NMHDR *pNMHDR, LRESULT *pResult)
     *pResult = 0;
 }
 
+static BOOL s_bExpanded = TRUE;
+
 void CTimberWolfDlg::OnSize(UINT nType, int cx, int cy)
 {
     ClxDialog::OnSize(nType, cx, cy);
@@ -427,35 +423,77 @@ BOOL CTimberWolfDlg::OnEraseBkgnd(CDC* pDC)
 
 void CTimberWolfDlg::OnBnClickedSeparator()
 {
+    static int s_nOffset = 0;
+
+
     /*
-    static int s_nSepRightOffset = 0; 
-
-    RECT rcDlg = { 0 };
-    GetClientRect(&rcDlg);
-
-    CWnd* pbtnSeparator = GetDlgItem(IDC_SEPARATOR);
-    assert(pbtnSeparator != NULL);
-
-    RECT rcSeparator = { 0 };
-    pbtnSeparator->GetWindowRect(&rcSeparator);
-    ScreenToClient(&rcSeparator);
-
-    RECT rcDlgEx = rcDlg;
-
-    // 初始应为展开，展开则收缩
-    if (g_bExpand) 
+    if (s_nOffset == 0)
     {
-        s_nSepRightOffset = rcDlg.right - rcSeparator.right;
-        rcDlgEx.right = rcSeparator.right;
-        g_bExpand = FALSE;
+        RECT rcDlg = { 0 };
+        GetClientRect(&rcDlg);
 
-    }
-    else 
-    {
-        rcDlgEx.right += s_nSepRightOffset;
-        g_bExpand = TRUE;
+        CWnd* pbtnSeparator = GetDlgItem(IDC_PANEL_SEPARATOR);
+        assert(pbtnSeparator != NULL);
+
+        RECT rcSeparator = { 0 };
+        pbtnSeparator->GetWindowRect(&rcSeparator);
+        ScreenToClient(&rcSeparator);
+        
+        s_nOffset = rcDlg.right - rcSeparator.right;
     }
 
-    ::SetWindowPos(m_hWnd, NULL, 0, 0, rcDlgEx.right, rcDlgEx.bottom, SWP_NOMOVE | SWP_NOZORDER);
+//      ModifyStyle(WS_SIZEBOX, 1);
+// 
+//     LONG lStyle = GetWindowLong(m_hWnd, GWL_STYLE);
+//     if (lStyle & WS_THICKFRAME) 
+//         SetWindowLong(m_hWnd, GWL_STYLE, lStyle & ~WS_THICKFRAME);
+
+    WINDOWPLACEMENT lpwndpl = { 0 };
+    GetWindowPlacement(&lpwndpl); 
+
+    if (s_bExpanded)
+    {
+        lpwndpl.rcNormalPosition.right -= s_nOffset;
+        s_bExpanded = FALSE;
+    }
+    else
+    {
+        lpwndpl.rcNormalPosition.right += s_nOffset;        
+        s_bExpanded = TRUE;
+    }
+
+    SetWindowPlacement(&lpwndpl);
+
+    return;
+
+//      ModifyStyle(1, WS_SIZEBOX);
+//     lStyle = GetWindowLong(m_hWnd, GWL_STYLE);
+//     if (!(lStyle & WS_THICKFRAME))
+//         SetWindowLong(m_hWnd, GWL_STYLE, lStyle | WS_THICKFRAME);
     */
+
+}
+
+HBRUSH CTimberWolfDlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+    HBRUSH hbr = ClxDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+
+    // TODO:  Change any attributes of the DC here
+
+    switch (pWnd->GetDlgCtrlID()) 
+    { 
+    case IDC_STATIC_YOU_TOWARD:
+    case IDC_STATIC_SAY:
+    case IDC_STATIC_SCROLL_AD:
+    case IDC_STATIC_PUBLIC:
+    case IDC_STATIC_MEMBER_LIST:
+//         pDC->SetBkMode(TRANSPARENT); 
+//         return (HBRUSH)GetStockObject(HOLLOW_BRUSH); 
+
+    default: 
+        break; 
+    } 
+
+    // TODO:  Return a different brush if the default is not desired
+    return hbr;
 }

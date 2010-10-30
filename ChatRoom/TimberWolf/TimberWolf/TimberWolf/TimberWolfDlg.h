@@ -8,6 +8,8 @@
 #include "xDialog.h"
 #include "SeparatorStatic.h"
 
+#include "PicListDlg.h"
+
 // CTimberWolfDlg 对话框
 class CTimberWolfDlg : public ClxDialog/*CDialog*/
 {
@@ -26,6 +28,7 @@ protected:
 
 protected:
     CSeparatorStatic m_staticSeparator;
+    CPicListDlg* m_pdlgPictureList;
 
 // 实现
 protected:
@@ -52,6 +55,6 @@ public:
     afx_msg void OnNMRclickListMember(NMHDR *pNMHDR, LRESULT *pResult);
     afx_msg void OnSize(UINT nType, int cx, int cy);
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
-public:
     afx_msg void OnBnClickedSeparator();
+    afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 };

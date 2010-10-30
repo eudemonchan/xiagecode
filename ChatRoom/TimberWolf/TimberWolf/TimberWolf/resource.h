@@ -12,6 +12,7 @@
 #define IDD_PIC_LIST                    131
 #define IDI_ICON1                       132
 #define IDI_ICON_HELLO                  132
+#define IDD_SETTING                     133
 #define IDC_CHECK1                      1000
 #define IDC_CHECK2                      1001
 #define IDC_EDIT1                       1002
@@ -42,6 +43,7 @@
 #define IDC_BUTTON6                     1013
 #define IDC_EXIT                        1013
 #define IDC_RICHEDIT_PUBLIC             1014
+#define IDC_BUTTON7                     1014
 #define IDC_MAIN                        1015
 #define IDC_BUTTON8                     1016
 #define IDC_STATIC_PUBLIC               1016
@@ -56,7 +58,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        133
+#define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1022
 #define _APS_NEXT_SYMED_VALUE           101

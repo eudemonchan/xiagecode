@@ -49,5 +49,6 @@ void CPicListDlg::OnBnClickedCancel()
 
 void CPicListDlg::OnBnClickedButton1()
 {
-    OnOK();
+    //OnOK();
+    ::ShowWindow(m_hWnd, SW_HIDE);
 }

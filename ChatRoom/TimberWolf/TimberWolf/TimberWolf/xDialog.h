@@ -11,6 +11,7 @@
 #ifndef XDIALOG_H_H
 #define XDIALOG_H_H
 
+/*
 
 // 防止背景与控件重合部分重绘导致闪烁
 #define ERASE_BKGND_BEGIN   \
@@ -27,7 +28,10 @@
     CRgn controlRgn;                                            \
     controlRgn.CreateRectRgnIndirect(&controlRect);             \
     if (bgRgn.CombineRgn(&bgRgn, &controlRgn, RGN_XOR) == ERROR) \
+    {                                                           \
+        OutputDebugStringW(L"CombineRgn() failed.\n");          \
         return FALSE;                                           \
+    }                                                           \
 }
 
 #define ADD_NOERASE_RECT(noEraseRect)                           \
@@ -43,7 +47,7 @@
     brush.CreateSolidBrush(clBrushColor);   \
     (pDC)->FillRgn(&bgRgn, &brush);         \
     brush.DeleteObject();                   \
-
+*/
 // 窗口控件位置关系宏定义
 #define RLT_L 0x01
 #define RLT_T 0x02
@@ -96,10 +100,10 @@ public:
 	void ShowSizeIcon(BOOL bShow = TRUE);
 
 private:
-    int m_iClientWidth; // 对话框client区域的宽度
-    int m_iClientHeight; // 对话框client区域的高度
-    int m_iMinWidth; // 对话框的最小宽度
-    int m_iMinHeight; // 对话框的最小高度
+    int m_iClientWidth;     // 对话框client区域的宽度
+    int m_iClientHeight;    // 对话框client区域的高度
+    int m_iMinWidth;        // 对话框的最小宽度
+    int m_iMinHeight;       // 对话框的最小高度
 
     PDLGCTLINFO m_pControlArray; // 控件信息数组指针
 
@@ -116,7 +120,9 @@ public:
 	afx_msg void OnSizing(UINT nSide, LPRECT lpRect);
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);	
 public:
-    afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
+    afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
+public:
+    afx_msg LRESULT OnNcHitTest(CPoint point);
 };
 
 

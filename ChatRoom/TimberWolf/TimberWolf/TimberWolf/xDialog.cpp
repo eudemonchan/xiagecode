@@ -13,24 +13,30 @@
 #endif
 
 ClxDialog::ClxDialog(UINT nID, CWnd* pParent /*=NULL*/)
-: CDialog(nID, pParent)
-, m_iClientWidth(0)
-, m_iClientHeight(0)
-, m_iMinWidth(0)
-, m_iMinHeight(0)
-, m_pControlArray(NULL)
-, m_iControlNumber(0)
-, m_bShowSizeIcon(TRUE)
+    : CDialog(nID, pParent)
+    , m_iClientWidth(0)
+    , m_iClientHeight(0)
+    , m_iMinWidth(0)
+    , m_iMinHeight(0)
+    , m_pControlArray(NULL)
+    , m_iControlNumber(0)
+    , m_bShowSizeIcon(TRUE)
 {
 	
 }
 
 BEGIN_MESSAGE_MAP(ClxDialog, CDialog)
-ON_WM_SIZE()
-ON_WM_SIZING()
-ON_WM_ERASEBKGND()
-ON_WM_CTLCOLOR()
+    ON_WM_SIZE()
+    ON_WM_SIZING()
+    ON_WM_ERASEBKGND()
+    ON_WM_GETMINMAXINFO()
+    ON_WM_NCHITTEST()
 END_MESSAGE_MAP()
+
+
+POINT g_ptMinSize = { 0 };
+BOOL g_bDone = FALSE;
+CRect g_gripRect;
 
 BOOL ClxDialog::OnInitDialog()
 {
@@ -42,8 +48,13 @@ BOOL ClxDialog::OnInitDialog()
 	// 以对话框的初始大小作为对话框的宽度和高度的最小值
 	CRect rectDlg;
 	GetWindowRect(rectDlg);
-	m_iMinWidth = rectDlg.Width();
-	m_iMinHeight = rectDlg.Height();
+// 	m_iMinWidth = rectDlg.Width();
+// 	m_iMinHeight = rectDlg.Height();
+
+    g_ptMinSize.x = rectDlg.Width();
+    g_ptMinSize.y = rectDlg.Height();
+
+    g_bDone = TRUE;
 
 	// 得到对话框 client 区域的大小 
 	CRect rectClient;
@@ -58,19 +69,36 @@ BOOL ClxDialog::OnInitDialog()
 	// 创建显示图标的静态控件并放在对话框右下角
 	m_wndSizeIcon.Create(NULL, WS_CHILD | WS_VISIBLE | SS_BITMAP, CRect(0, 0, m_bitmap.bmWidth, m_bitmap.bmHeight), this, 0);
 	m_wndSizeIcon.SetBitmap(m_bmpSizeIcon);
-	m_wndSizeIcon.MoveWindow(m_iClientWidth - m_bitmap.bmWidth, m_iClientHeight - m_bitmap.bmHeight, m_bitmap.bmWidth, m_bitmap.bmHeight);
 	
+    g_gripRect.left = m_iClientWidth - m_bitmap.bmWidth;
+    g_gripRect.top = m_iClientHeight - m_bitmap.bmHeight;
+    g_gripRect.right = g_gripRect.left + m_bitmap.bmWidth;
+    g_gripRect.bottom = g_gripRect.top +  m_bitmap.bmHeight;
+
+//    m_wndSizeIcon.MoveWindow(m_iClientWidth - m_bitmap.bmWidth, m_iClientHeight - m_bitmap.bmHeight, m_bitmap.bmWidth, m_bitmap.bmHeight);
+    m_wndSizeIcon.MoveWindow(&g_gripRect);
+	
+    
+
     // 显示图标
 	m_wndSizeIcon.ShowWindow(m_bShowSizeIcon);
-	
+
 	return TRUE;
 }
-
-BOOL g_bRedraw = FALSE;
 
 void ClxDialog::OnSize(UINT nType, int cx, int cy) 
 {
 	CDialog::OnSize(nType, cx, cy);
+
+//     if (nType != SIZE_MAXHIDE && nType != SIZE_MAXSHOW)
+//     {
+//         ArrangeLayout();
+//         if (nType == SIZE_RESTORED)
+//             GetWindowRect(&m_rcWnd);
+//     }
+
+    if (nType == SIZE_MAXHIDE || nType == SIZE_MAXSHOW)
+        return;
 
 	// 对话框宽度和高度的增量 
 	int iIncrementX = cx - m_iClientWidth;
@@ -82,6 +110,8 @@ void ClxDialog::OnSize(UINT nType, int cx, int cy)
 		iIncrementX = iIncrementY = 0;
 	}
 	
+    HDWP hdwp = BeginDeferWindowPos(m_iControlNumber);
+
 	for (int i = 0; i < m_iControlNumber; i++)
 	{
 		CWnd *pWndCtrl = NULL;
@@ -106,33 +136,6 @@ void ClxDialog::OnSize(UINT nType, int cx, int cy)
 			int iWidth = rectCtrl.Width();
 			int iHeight = rectCtrl.Height();
 
-            /*
- 			switch (iFlag)
- 			{
- 			case MOVEX: // X方向移动
- 				iLeft += (iIncrementX * iPercent / 100);
- 				break;
- 			case MOVEY: // Y方向移动
- 				iTop += (iIncrementY * iPercent / 100);
- 				break;
- 			case MOVEXY: // X方向和Y方向同时移动
- 				iLeft += (iIncrementX * iPercent / 100);
- 				iTop += (iIncrementY * iPercent / 100);
- 				break;
- 			case ELASTICX: // X方向改变大小
- 				iWidth += (iIncrementX * iPercent / 100);
- 				break;
- 			case ELASTICY: // Y方向改变大小
- 				iHeight += (iIncrementY * iPercent / 100);
- 				break;
- 			case ELASTICXY: // X方向和Y方向同时改变大小
- 				iWidth += (iIncrementX * iPercent / 100);
- 				iHeight += (iIncrementY * iPercent / 100);
- 				break;
- 			default:
- 				;
- 			}
-            */
             switch (iFlag)
             {
                 // 跟随左或右为默认，无须处理
@@ -187,19 +190,26 @@ void ClxDialog::OnSize(UINT nType, int cx, int cy)
                 ;
             }
 
-			// 把控件移动到新位置
-			pWndCtrl->MoveWindow(iLeft, iTop, iWidth, iHeight);
-            //InvalidateRect(CRect(CPoint(iLeft, iTop), CSize(iWidth, iHeight)), TRUE);
-		}
+            CRect rcNew(CPoint(iLeft, iTop), CSize(iWidth, iHeight));
 
-        Invalidate(FALSE);
+            if (!rcNew.EqualRect(&rectCtrl))
+            {
+                DeferWindowPos(hdwp, pWndCtrl->m_hWnd, NULL, rcNew.left, rcNew.top, rcNew.Width(), rcNew.Height(), SWP_NOZORDER);
+
+//                 if (!pl->bg_safe)
+//                 {
+//                     pWndCtrl->MoveWindow(0x4000,0x4000,0,0,FALSE);
+//                     InvalidateRect(&rectCtrl);
+//                 }
+            }
+		}
 	}
 
 	// 把图标移动到对话框右下角
 	if (IsWindow(m_wndSizeIcon.GetSafeHwnd()))
 		m_wndSizeIcon.MoveWindow(cx - m_bitmap.bmWidth, cy - m_bitmap.bmHeight, m_bitmap.bmWidth, m_bitmap.bmHeight);
 	
-    g_bRedraw = TRUE;
+    EndDeferWindowPos(hdwp);
 
 	// 记录对话框 client 区域的大小
 	if (nType != SIZE_MINIMIZED)
@@ -212,6 +222,7 @@ void ClxDialog::OnSizing(UINT nSide, LPRECT lpRect)
 {
 	CDialog::OnSizing(nSide, lpRect);
 
+    /*
 	// 对话框不能小于初始大小
 	int iWidth = lpRect->right - lpRect->left;
 	int iHeight = lpRect->bottom - lpRect->top;
@@ -221,6 +232,7 @@ void ClxDialog::OnSizing(UINT nSide, LPRECT lpRect)
 
 	if(iHeight <= m_iMinHeight)
 		lpRect->bottom = lpRect->top + m_iMinHeight;
+        */
 }
 BOOL ClxDialog::SetControlProperty(PDLGCTLINFO lp, int nElements)
 {
@@ -242,34 +254,26 @@ void ClxDialog::ShowSizeIcon(BOOL bShow /*=NULL*/)
 
 BOOL ClxDialog::OnEraseBkgnd(CDC* pDC)
 {
-//     if (g_bRedraw)
-//     {
-//         ERASE_BKGND_BEGIN;
-// 
-//         for (int i = 0; i < m_iControlNumber; i++)
-//         {
-//             int iId = m_pControlArray[i].iId;
-//             ADD_NOERASE_CONTROL(iId);            
-//         }
-// 
-//         // 用对话框背景颜色绘制剪切区域
-//         ERASE_BKGND_END(pDC, GetSysColor(COLOR_3DFACE));
-//         
-//         g_bRedraw = FALSE;
-//     }
-
      return CDialog::OnEraseBkgnd(pDC);
-    //return TRUE;
+}
+void ClxDialog::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
+{
+    // TODO: Add your message handler code here and/or call default
+
+    //CDialog::OnGetMinMaxInfo(lpMMI);
+    if (g_bDone)
+        lpMMI->ptMinTrackSize = g_ptMinSize;
+
+   // CDialog::OnGetMinMaxInfo(lpMMI);
 }
 
-HBRUSH ClxDialog::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+LRESULT ClxDialog::OnNcHitTest(CPoint point)
 {
-    HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+    CPoint pt = point;
+    ScreenToClient(&pt);
 
-    // TODO:  Change any attributes of the DC here
-    if (nCtlColor == CTLCOLOR_STATIC)
-        pDC->SetBkMode(TRANSPARENT);
+    if (g_gripRect.PtInRect(pt))
+        return HTBOTTOMRIGHT;
 
-    // TODO:  Return a different brush if the default is not desired
-    return hbr;
+    return CDialog::OnNcHitTest(point);
 }

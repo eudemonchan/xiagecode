@@ -100,7 +100,7 @@ void CFileShareDlg::OnBnClickedOk()
 void CFileShareDlg::OnBnClickedShare()
 {
     WCHAR szFilters[] =
-        L"MyType Files (*.my)|*.my|All Files (*.*)|*.*||";
+        L"MyType Files (*.mp4)|*.mp4|All Files (*.*)|*.*||";
 
     // Create an Open dialog; the default file name extension is ".my".
     CFileDialog fileDlg (TRUE, L"mp4", L"*.mp4",

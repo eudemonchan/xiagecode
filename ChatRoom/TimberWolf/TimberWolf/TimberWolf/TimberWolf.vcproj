@@ -202,11 +202,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ResizableDialog.cpp"
+				RelativePath=".\SeparatorStatic.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SeparatorStatic.cpp"
+				RelativePath=".\SettingDlg.cpp"
 				>
 			</File>
 			<File
@@ -260,15 +260,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ResizableDialog.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Resource.h"
 				>
 			</File>
 			<File
 				RelativePath=".\SeparatorStatic.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SettingDlg.h"
 				>
 			</File>
 			<File
