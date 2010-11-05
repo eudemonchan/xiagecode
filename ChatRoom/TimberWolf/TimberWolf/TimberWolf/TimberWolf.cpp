@@ -10,6 +10,7 @@
 #endif
 
 #include "LogonDlg.h"
+#include "GetMembersPrgsDlg.h"
 
 // CTimberWolfApp
 
@@ -63,10 +64,13 @@ BOOL CTimberWolfApp::InitInstance()
     VERIFY(AfxInitRichEdit());
 
     CLogonDlg dlgLogon;
-    if (dlgLogon.DoModal() != IDOK) 
+    if (dlgLogon.DoModal() == IDOK) 
     {
-        return FALSE;
+        CGetMembersPrgsDlg dlgPrgs;
+        dlgPrgs.DoModal();        
     }
+    else 
+        return FALSE;
 
 	CTimberWolfDlg dlg;
 	m_pMainWnd = &dlg;

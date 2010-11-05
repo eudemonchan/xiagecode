@@ -30,6 +30,7 @@ void CLogonDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CLogonDlg, CDialog)
     ON_WM_CLOSE()
     ON_BN_CLICKED(IDOK, &CLogonDlg::OnBnClickedOk)
+    ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -70,5 +71,29 @@ void CLogonDlg::OnClose()
 void CLogonDlg::OnBnClickedOk()
 {
     // TODO: 在此添加控件通知处理程序代码
+    //OnOK();
+    static bool s_bRunning = false;
+    if (!s_bRunning)
+    {
+        GetDlgItem(IDC_STATIC_LOGON_PROMPT)->SetWindowText(L"正在与服务器连接 ...");
+        ::SetTimer(m_hWnd, 0, 3000, NULL);
+        s_bRunning = true;
+    }
+    else
+        ;
+}
+
+void CLogonDlg::OnTimer(UINT_PTR nIDEvent)
+{
+    ::KillTimer(m_hWnd, nIDEvent);
+
+    GetDlgItem(IDC_STATIC_LOGON_PROMPT)->SetWindowText(L"正在验证用户信息 ...");
+    Sleep(2000);
+
+    GetDlgItem(IDC_STATIC_LOGON_PROMPT)->SetWindowText(L"登录成功 ...");
+    Sleep(1000);
+
     OnOK();
+
+    CDialog::OnTimer(nIDEvent);
 }

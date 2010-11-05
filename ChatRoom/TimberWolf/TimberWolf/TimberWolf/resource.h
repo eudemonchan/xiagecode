@@ -13,6 +13,7 @@
 #define IDI_ICON1                       132
 #define IDI_ICON_HELLO                  132
 #define IDD_SETTING                     133
+#define IDD_GET_MEMBERS_PROGRESS        134
 #define IDC_CHECK1                      1000
 #define IDC_CHECK2                      1001
 #define IDC_EDIT1                       1002
@@ -53,14 +54,17 @@
 #define IDC_STATIC_SAY                  1019
 #define IDC_RICHEDIT_SEND               1020
 #define IDC_STATIC_SCROLL_AD            1021
+#define IDC_STATIC_LOGON_PROMPT         1022
+#define IDC_PROGRESS1                   1023
+#define IDC_PRGS_GET_MEMBERS            1023
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        134
+#define _APS_NEXT_RESOURCE_VALUE        135
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

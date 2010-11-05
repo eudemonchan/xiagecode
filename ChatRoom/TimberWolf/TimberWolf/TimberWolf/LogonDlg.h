@@ -25,4 +25,6 @@ public:
     virtual BOOL OnInitDialog();
     afx_msg void OnClose();
     afx_msg void OnBnClickedOk();
+public:
+    afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
