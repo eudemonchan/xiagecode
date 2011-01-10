@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{D632FFBF-7BA0-468E-8CDB-EFA46983935A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>VirtualDiskWrapper</RootNamespace>
+    <AssemblyName>VirtualDiskWrapper</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkSubset>Full</TargetFrameworkSubset>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ComponentFactory.Krypton.Toolkit, Version=3.5.2.0, Culture=neutral, PublicKeyToken=a87e673e9ecb6e8e, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="VhdAsyncOperation.cs" />
+    <Compile Include="Interop\ATTACH_VIRTUAL_DISK_FLAG.cs" />
+    <Compile Include="Interop\ATTACH_VIRTUAL_DISK_PARAMETERS.cs" />
+    <Compile Include="Interop\ATTACH_VIRTUAL_DISK_VERSION.cs" />
+    <Compile Include="Interop\COMPACT_VIRTUAL_DISK_FLAG.cs" />
+    <Compile Include="Interop\COMPACT_VIRTUAL_DISK_PARAMETERS.cs" />
+    <Compile Include="Interop\COMPACT_VIRTUAL_DISK_PARAMETERS_Version1.cs" />
+    <Compile Include="Interop\COMPACT_VIRTUAL_DISK_VERSION.cs" />
+    <Compile Include="Interop\CREATE_VIRTUAL_DISK_FLAG.cs" />
+    <Compile Include="Interop\CREATE_VIRTUAL_DISK_PARAMETERS.cs" />
+    <Compile Include="Interop\CREATE_VIRTUAL_DISK_VERSION.cs" />
+    <Compile Include="Interop\CREATE_VIRTUAL_DISK_VERSION_Union.cs" />
+    <Compile Include="Interop\DEPENDENT_DISK_FLAG.cs" />
+    <Compile Include="Interop\DETACH_VIRTUAL_DISK_FLAG.cs" />
+    <Compile Include="Interop\EXPAND_VIRTUAL_DISK_FLAG.cs" />
+    <Compile Include="Interop\EXPAND_VIRTUAL_DISK_PARAMETERS.cs" />
+    <Compile Include="Interop\EXPAND_VIRTUAL_DISK_PARAMETERS_Version1.cs" />
+    <Compile Include="Interop\EXPAND_VIRTUAL_DISK_VERSION.cs" />
+    <Compile Include="Interop\GET_STORAGE_DEPENDENCY_FLAG.cs" />
+    <Compile Include="Interop\GET_VIRTUAL_DISK_INFO.cs" />
+    <Compile Include="Interop\GET_VIRTUAL_DISK_INFO_ParentLocation.cs" />
+    <Compile Include="Interop\GET_VIRTUAL_DISK_INFO_PROVIDER_SUBTYPE.cs" />
+    <Compile Include="Interop\GET_VIRTUAL_DISK_INFO_Size.cs" />
+    <Compile Include="Interop\GET_VIRTUAL_DISK_INFO_Union.cs" />
+    <Compile Include="Interop\GET_VIRTUAL_DISK_INFO_VERSION.cs" />
+    <Compile Include="Interop\MERGE_VIRTUAL_DISK_FLAG.cs" />
+    <Compile Include="Interop\MERGE_VIRTUAL_DISK_PARAMETERS.cs" />
+    <Compile Include="Interop\MERGE_VIRTUAL_DISK_PARAMETERS_Version1.cs" />
+    <Compile Include="Interop\MERGE_VIRTUAL_DISK_VERSION.cs" />
+    <Compile Include="Interop\NativeMethods.cs" />
+    <Compile Include="Interop\OPEN_VIRTUAL_DISK_FLAG.cs" />
+    <Compile Include="Interop\OPEN_VIRTUAL_DISK_PARAMETERS.cs" />
+    <Compile Include="Interop\OPEN_VIRTUAL_DISK_VERSION.cs" />
+    <Compile Include="Interop\SET_VIRTUAL_DISK_INFO.cs" />
+    <Compile Include="Interop\SET_VIRTUAL_DISK_INFO_Union.cs" />
+    <Compile Include="Interop\SET_VIRTUAL_DISK_INFO_VERSION.cs" />
+    <Compile Include="Interop\STORAGE_DEPENDENCY_INFO.cs" />
+    <Compile Include="Interop\STORAGE_DEPENDENCY_INFO_TYPE_1.cs" />
+    <Compile Include="Interop\STORAGE_DEPENDENCY_INFO_TYPE_2.cs" />
+    <Compile Include="Interop\STORAGE_DEPENDENCY_INFO_Union.cs" />
+    <Compile Include="Interop\STORAGE_DEPENDENCY_INFO_VERSION.cs" />
+    <Compile Include="Interop\STORAGE_TYPE_DEVICE.cs" />
+    <Compile Include="Interop\VIRTUAL_DISK_PROGRESS.cs" />
+    <Compile Include="VHD.cs" />
+    <Compile Include="Interop\VIRTUAL_DISK_ACCESS_MASK.cs" />
+    <Compile Include="Interop\VIRTUAL_STORAGE_TYPE.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Interop\VIRTUAL_STORAGE_TYPE_VENDOR.cs" />
+    <Compile Include="VhdInfos.cs" />
+    <Compile Include="VHD_ATTACH_FLAG.cs" />
+    <Compile Include="VHD_CREATE_FLAG.cs" />
+    <Compile Include="VHD_INFO_REQUEST.cs" />
+    <Compile Include="VHD_OPEN_ACCESS.cs" />
+    <Compile Include="VHD_OPEN_FLAG.cs" />
+    <Compile Include="VHD_STORAGE_TYPE.cs" />
+    <Compile Include="VHD_STORAGE_TYPE_DEVICE.cs" />
+    <Compile Include="VirtualDiskOperationProgress.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

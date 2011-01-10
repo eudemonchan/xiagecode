@@ -1,0 +1,52 @@
+void example (void)
+{
+	const TCHAR * const mount_point = TEXT ("D:\\SomeEmptyDirectory\\");	// Some empty directory
+	const TCHAR * const vhd_filename = TEXT("D:\\SomeVHD.vhd");	// VHD file that already exists and is formatted
+	HANDLE handle;		// VHD handle
+	VIRTUAL_STORAGE_TYPE storageType =
+	{
+	  VIRTUAL_STORAGE_TYPE_DEVICE_VHD,
+	  {0xec984aec, 0xa0f9, 0x47e9, 0x90, 0x1f, 0x71, 0x41, 0x5a, 0x66, 0x34, 0x5b} //VIRTUAL_STORAGE_TYPE_VENDOR_MICROSOFT - this constant doesn't link
+	};
+	OPEN_VIRTUAL_DISK_PARAMETERS parameters =
+	{
+	  OPEN_VIRTUAL_DISK_VERSION_1
+	};
+	parameters.Version1.RWDepth = OPEN_VIRTUAL_DISK_RW_DEPTH_DEFAULT;
+
+	if (ERROR_SUCCESS == OpenVirtualDisk (&storageType, vhd_filename, VIRTUAL_DISK_ACCESS_ALL, OPEN_VIRTUAL_DISK_FLAG_NONE, NULL, &handle))
+	{
+		if (ERROR_SUCCESS == AttachVirtualDisk (handle, NULL, ATTACH_VIRTUAL_DISK_FLAG_NO_DRIVE_LETTER, 0, 0, NULL))
+		{
+			// Query the virtual disk for information (guid)
+			GET_VIRTUAL_DISK_INFO disk_info =
+			{
+			  GET_VIRTUAL_DISK_INFO_IDENTIFIER	// Ask for the identifier (guid) for the VHD
+			};
+			ULONG virtual_disk_size = sizeof (GET_VIRTUAL_DISK_INFO);
+
+			if (ERROR_SUCCESS == GetVirtualDiskInformation (handle, &virtual_disk_size, &disk_info, 0))
+			{
+				// Build the volume name from the GUID provided for the VHD API
+				TCHAR guid_buffer [256];
+				TCHAR volume_name [256];
+				StringFromGUID2 (disk_info.Identifier, &guid_buffer[0], sizeof (guid_buffer) / sizeof (TCHAR));
+				_sntprintf_s (volume_name, sizeof (volume_name)/sizeof (TCHAR), TEXT ("\\\\?\\Volume%s\\"), guid_buffer);
+
+				_tprintf (TEXT ("GetVirtualDiskInformation Volume name for the VHD=%s\n"), volume_name);
+				if (FALSE == SetVolumeMountPoint (mount_point, volume_name))
+				{
+					_tprintf (TEXT ("Cannot mount volume using GetVirtualDiskInformation\n"));
+					_tprintf (TEXT (" GetLastError ()=%lu\n"), GetLastError ());
+				}
+			}
+		}	// Attach
+		else
+		{
+			_tprintf (TEXT (" Attach failed, GetLastError ()=%lu\n"), GetLastError ());
+		}
+		DetachVirtualDisk (handle, DETACH_VIRTUAL_DISK_FLAG_NONE, 0);
+	}	// Open
+	CloseHandle (handle);
+}
+OuputsGetVirtualDiskInformation Volume name for the VHD=\\?\Volume{37D9A427-9DAA-4F7A-BD00-CA3438DAC019}\Cannot mount volume using GetVirtualDiskInformation GetLastError ()=87
