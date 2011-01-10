@@ -57,6 +57,7 @@ CVHDProjectDlg::CVHDProjectDlg(CWnd* pParent /*=NULL*/)
 void CVHDProjectDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_PROGRESS1, m_proCtrl);
 }
 
 BEGIN_MESSAGE_MAP(CVHDProjectDlg, CDialogEx)
@@ -102,6 +103,8 @@ BOOL CVHDProjectDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+	m_proCtrl.SetRange(0,100);
+	m_proCtrl.SetStep(1);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -190,24 +193,32 @@ CString GetVHDFilePath()
 void CVHDProjectDlg::OnBnClickedBtnStart()
 {
 	// TODO: Add your control notification handler code h
-	CString strPath = GetVHDFilePath();
-	if ( strPath.IsEmpty() )
+	//CString strPath = GetVHDFilePath();
+	//if ( strPath.IsEmpty() )
+	//{
+	//	MessageBox(L"请设置vhd文件路径！");
+	//	return;
+	//}
+	//if( ERROR_SUCCESS != m_vhd.Open(strPath) )
+	//{
+	//	MessageBox(L"Open失败！");
+	//	return;
+	//}
+	//if ( ERROR_SUCCESS != m_vhd.Attach() )
+	//{
+	//	MessageBox(L"attach失败！");
+	//	m_vhd.Close();
+	//	return;
+	//}
+	//MessageBox(L"成功!");
+	if( m_vhd.Open(L"d:\\1g.vhd") )
 	{
-		MessageBox(L"请设置vhd文件路径！");
-		return;
+		if( m_vhd.Attach() )
+		{
+			return;
+		}
 	}
-	if( ERROR_SUCCESS != m_vhd.Open(strPath) )
-	{
-		MessageBox(L"Open失败！");
-		return;
-	}
-	if ( ERROR_SUCCESS != m_vhd.Attach() )
-	{
-		MessageBox(L"attach失败！");
-		m_vhd.Close();
-		return;
-	}
-	MessageBox(L"成功!");
+	MessageBox(L"失败");
 }
 
 
@@ -228,54 +239,72 @@ void CVHDProjectDlg::OnBnClickedBtnStop()
 	MessageBox(L"成功!");
 }
 
-DWORD WINAPI CreateProc(LPVOID lParam)
-{
-	CVHDProjectDlg *pDlg = (CVHDProjectDlg*)lParam;
-	ULONGLONG i64 = 1024*1024;
-	i64 *= 1024;
-	i64 *= 8;
-
-	pDlg->m_ol.hEvent = NULL;
-	ZeroMemory( &pDlg->m_ol, sizeof(OVERLAPPED));
-	pDlg->m_ol.Internal = STATUS_PENDING;
-	pDlg->m_ol.hEvent = ::CreateEventA( NULL, TRUE, FALSE, NULL );
-	//::CreateThread( NULL, 0, CreateProc, this, 0, NULL );
-	if(ERROR_SUCCESS == pDlg->m_vhd.CreateFixed(L"d:\\1111.vhd", i64, VIRTUAL_DISK_ACCESS_CREATE, NULL, NULL, &pDlg->m_ol ) )
-	{
-		AfxMessageBox(L"创建失败！");
-	}
-	else
-	{
-		CString str;
-		str.Format(L"%d", GetLastError());
-		AfxMessageBox(str);
-	}
-	pDlg->m_vhd.Close();
-	pDlg->MessageBox(L"创建完毕！");
-	return 0;
-}
+//DWORD WINAPI CreateProc(LPVOID lParam)
+//{
+//	CVHDProjectDlg *pDlg = (CVHDProjectDlg*)lParam;
+//	ULONGLONG i64 = 1024*1024;
+//	i64 *= 1024;
+//	i64 *= 8;
+//
+//	pDlg->m_ol.hEvent = NULL;
+//	ZeroMemory( &pDlg->m_ol, sizeof(OVERLAPPED));
+//	pDlg->m_ol.Internal = STATUS_PENDING;
+//	pDlg->m_ol.hEvent = ::CreateEventA( NULL, TRUE, FALSE, NULL );
+//	//::CreateThread( NULL, 0, CreateProc, this, 0, NULL );
+//	if(ERROR_SUCCESS == pDlg->m_vhd.CreateFixed(L"d:\\1111.vhd", i64, VIRTUAL_DISK_ACCESS_CREATE, NULL, NULL, &pDlg->m_ol ) )
+//	{
+//		AfxMessageBox(L"创建失败！");
+//	}
+//	else
+//	{
+//		CString str;
+//		str.Format(L"%d", GetLastError());
+//		AfxMessageBox(str);
+//	}
+//	pDlg->m_vhd.Close();
+//	pDlg->MessageBox(L"创建完毕！");
+//	return 0;
+//}
 
 void CVHDProjectDlg::OnBnClickedBtnCreate()
 {
 	// TODO: Add your control notification handler code here
+	//ULONGLONG i64 = 1024*1024;
+	//i64 *= 1024;
+	//i64 *= 8;
+	//
+	//m_ol.hEvent = NULL;
+	////::CreateThread( NULL, 0, CreateProc, this, 0, NULL );
+	//m_ol.hEvent = NULL;
+	//ZeroMemory( &m_ol, sizeof(OVERLAPPED));
+	//m_ol.Internal = STATUS_PENDING;
+	//if(ERROR_SUCCESS == m_vhd.CreateFixed(L"d:\\1111.vhd", i64, VIRTUAL_DISK_ACCESS_ALL, NULL, NULL, &m_ol ) )
+	//{
+	//	MessageBox(L"创建失败！");
+	//}
+	//else
+	//{
+	//	CString str;
+	//	str.Format(L"%d", GetLastError());
+	//	MessageBox(str);
+	//}
 	ULONGLONG i64 = 1024*1024;
 	i64 *= 1024;
 	i64 *= 8;
-	
-	m_ol.hEvent = NULL;
-	//::CreateThread( NULL, 0, CreateProc, this, 0, NULL );
-	m_ol.hEvent = NULL;
-	ZeroMemory( &m_ol, sizeof(OVERLAPPED));
-	m_ol.Internal = STATUS_PENDING;
-	if(ERROR_SUCCESS == m_vhd.CreateFixed(L"d:\\1111.vhd", i64, VIRTUAL_DISK_ACCESS_ALL, NULL, NULL, &m_ol ) )
+
+	ULARGE_INTEGER ulAvailSpace; 
+	GetDiskFreeSpaceEx( L"d:\\", &ulAvailSpace, NULL, NULL );
+	if ( ulAvailSpace.QuadPart < (i64 + (ULONGLONG)(1024*1024*10) ) )
 	{
-		MessageBox(L"创建失败！");
+		MessageBox(L"磁盘空间不足!");
+		return;
 	}
-	else
+	if( !m_vhd.CreateFixedAsync(L"d:\\1g.vhd",i64) )
 	{
 		CString str;
-		str.Format(L"%d", GetLastError());
-		MessageBox(str);
+		str.Format(L"创建错误，错误码：%d", m_vhd.GetLastErrorCode() );
+		MessageBox(L"创建失败！");
+		return;
 	}
 	SetTimer(1,500, NULL);
 }
@@ -286,14 +315,31 @@ void CVHDProjectDlg::OnTimer(UINT_PTR nIDEvent)
 	// TODO: Add your message handler code here and/or call default
 	/*SetDlgItemInt( IDC_STATIC_STATE, m_ol.Internal);
 	SetDlgItemInt( IDC_STATIC_SECOND, m_ol.Offset);*/
+	//VIRTUAL_DISK_PROGRESS process;
+	//if( ERROR_SUCCESS != GetVirtualDiskOperationProgress(m_vhd.m_h, &m_ol, &process) )
+	//{
+	//	CString strKk;
+	//	strKk.Format(L"%d", GetLastError());
+	//	MessageBox(strKk);
+	//}
 	VIRTUAL_DISK_PROGRESS process;
-	if( ERROR_SUCCESS != GetVirtualDiskOperationProgress(m_vhd.m_h, &m_ol, &process) )
+	if ( m_vhd.GetProcessState(&process))
 	{
-		CString strKk;
-		strKk.Format(L"%d", GetLastError());
-		MessageBox(strKk);
+		if ( process.OperationStatus == ERROR_IO_PENDING )
+		{
+			double kk = ((double)process.CurrentValue/(double)process.CompletionValue);
+			int abc = (int)(kk*100.0);
+			m_proCtrl.SetPos(abc);
+		}
+		else if ( process.OperationStatus == ERROR_SUCCESS )
+		{
+			KillTimer(1);
+			m_proCtrl.SetPos(100);
+			MessageBox(L"成功！");
+		}
 	}
-	SetDlgItemInt(IDC_STATIC_STATE, process.CurrentValue);
-	SetDlgItemInt(IDC_STATIC_SECOND, process.CompletionValue);
+
+	//SetDlgItemInt(IDC_STATIC_STATE, process.CurrentValue);
+	//SetDlgItemInt(IDC_STATIC_SECOND, process.CompletionValue);
 	CDialogEx::OnTimer(nIDEvent);
 }

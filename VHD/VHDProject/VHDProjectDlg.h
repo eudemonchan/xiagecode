@@ -5,6 +5,7 @@
 #pragma once
 
 #include "VHDManager.h"
+#include "afxcmn.h"
 // CVHDProjectDlg dialog
 class CVHDProjectDlg : public CDialogEx
 {
@@ -36,4 +37,5 @@ public:
 	afx_msg void OnBnClickedBtnCreate();
 	OVERLAPPED m_ol;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	CProgressCtrl m_proCtrl;
 };

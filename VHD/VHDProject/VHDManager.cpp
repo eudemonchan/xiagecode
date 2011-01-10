@@ -16,7 +16,7 @@ CVHDManager::~CVHDManager(void)
 {
 }
 
-DWORD CVHDManager::CreateFixed(PCWSTR path,
+BOOL CVHDManager::CreateFixed(PCWSTR path,
                       ULONGLONG size,
                       VIRTUAL_DISK_ACCESS_MASK accessMask,
                       __in_opt PCWSTR source,
@@ -106,22 +106,27 @@ BOOL CVHDManager::Open(PCWSTR path,
 	}
 	return TRUE;
 }
-DWORD CVHDManager::Attach(ATTACH_VIRTUAL_DISK_FLAG flags,
+BOOL CVHDManager::Attach(ATTACH_VIRTUAL_DISK_FLAG flags,
 	__in_opt PSECURITY_DESCRIPTOR securityDescriptor,
 	__in_opt OVERLAPPED* overlapped)
 {
 	assert(0 != m_h);
 
 
-	return ::AttachVirtualDisk(m_h,
+	if( ERROR_SUCCESS != ::AttachVirtualDisk(m_h,
 		securityDescriptor,
 		flags,
 		0, // no provider-specific flags
 		0, // no parameters
-		overlapped);
+		overlapped))
+	{
+		m_dwLastError = GetLastError();
+		return FALSE;
+	}
+	return TRUE;
 }
 
-DWORD CVHDManager::GetSize(__out ULONGLONG& virtualSize,
+BOOL CVHDManager::GetSize(__out ULONGLONG& virtualSize,
 	__out ULONGLONG& physicalSize,
 	__out ULONG& blockSize,
 	__out ULONG& sectorSize)
@@ -147,20 +152,27 @@ DWORD CVHDManager::GetSize(__out ULONGLONG& virtualSize,
 		blockSize = info.Size.BlockSize;
 		sectorSize = info.Size.SectorSize;
 	}
-
-	return result;
+	else
+	{
+		m_dwLastError = GetLastError();
+		return FALSE;
+	}
+	return TRUE;
 }
 
-DWORD CVHDManager::Detach( __in     DETACH_VIRTUAL_DISK_FLAG Flags,
+BOOL CVHDManager::Detach( __in     DETACH_VIRTUAL_DISK_FLAG Flags,
 	__in     ULONG                    ProviderSpecificFlags)
 {
 	if ( m_h == NULL )
 	{
 		return ERROR_SUCCESS;
 	}
-	DWORD ret = ::DetachVirtualDisk(m_h,Flags, ProviderSpecificFlags);
-	m_h = NULL;
-	return ret;
+	if( ERROR_SUCCESS != ::DetachVirtualDisk(m_h,Flags, ProviderSpecificFlags) )
+	{
+		m_dwLastError = GetLastError();
+		return FALSE;
+	}
+	return TRUE;
 }
 void CVHDManager::Close()
 {
@@ -170,16 +182,37 @@ void CVHDManager::Close()
 		m_h = NULL;
 	}
 }
+DWORD CVHDManager::GetLastErrorCode()
+{
+	return m_dwLastError;
+}
 
 BOOL CVHDManager::CreateFixedAsync( PCWSTR path, ULONGLONG size)
 {
-	Zero
-
-	CreateFixed( path, size, VIRTUAL_DISK_ACCESS_ALL, NULL, NULL, &m_ol);
+	ZeroMemory( &m_ol, sizeof(OVERLAPPED));
+	if( !CreateFixed( path, size, VIRTUAL_DISK_ACCESS_ALL, NULL, NULL, &m_ol) )
+	{
+		if ( GetLastErrorCode() == ERROR_IO_PENDING )
+		{
+			return TRUE;
+		}
+		return FALSE;
+	}
+	return TRUE;
 }
 BOOL CVHDManager::CreateFixedSync( PCWSTR path, ULONGLONG size)
 {
+	return CreateFixed( path, size, VIRTUAL_DISK_ACCESS_CREATE, NULL, NULL, NULL );
+}
 
+BOOL CVHDManager::GetProcessState(VIRTUAL_DISK_PROGRESS *pProgress)
+{
+	if( ERROR_SUCCESS != GetVirtualDiskOperationProgress(m_h, &m_ol, pProgress) )
+	{
+		m_dwLastError = GetLastError();
+		return FALSE;
+	}
+	return TRUE;
 }
 //DWORD CVHDManager::GetParentLocation(__out bool& resolved,
 //	__out CAtlArray<CString>& paths)
