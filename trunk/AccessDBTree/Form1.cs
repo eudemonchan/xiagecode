@@ -15,7 +15,7 @@ namespace AccessDBTree
         public Form1()
         {
             InitializeComponent();
-            m_dbTree = new DBTreeOperation("g:\\temp\\test.mdb");
+            m_dbTree = new DBTreeOperation("DBInit.mdb");
         }
         public static DBTreeOperation m_dbTree;
         MyTreeView view = null;
