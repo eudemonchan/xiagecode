@@ -11,8 +11,8 @@ namespace AccessDBTree
 {
     public struct DirItem
     {
-        public int ID;
-        public string Name;
+        public int ID {get;set;}
+        public string Name {get;set;}
     }
 
     public class DBTreeOperation
@@ -41,6 +41,24 @@ namespace AccessDBTree
             m_dicDirNames = new Dictionary<string, string>();
             m_dirProvider = new XmlDataProvider();
             m_dirProvider.XPath = "*";
+        }
+
+        public bool DeleleFile( string strFileID )
+        {
+            string strSql = string.Format( @"DELETE FROM FILE WHERE ID = {0}", strFileID );
+            return ExecuteSQLNonquery(strSql);
+        }
+
+        public bool DeleteFiles( List<string> strFiles)
+        {
+            foreach ( string name in strFiles )
+            {
+                if ( !DeleleFile(name) )
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private bool GetAllDirNames()
@@ -146,11 +164,35 @@ namespace AccessDBTree
             }
             return -1;
         }
+
+        public int IsDirNameExist(string strFatherID, string strDirName)
+        {
+            OleDbCommand cmd = m_conn.CreateCommand();
+            cmd.CommandText = string.Format(@"SELECT * FROM Directory WHERE FatherID = {0} AND Name = '{1}'", strFatherID, strDirName);
+            try
+            {
+                OleDbDataReader reader = cmd.ExecuteReader();
+                if ( reader.Read() )
+                {
+                    reader.Close();
+                    return 1;
+                }
+                else
+                {
+                    reader.Close();
+                    return 0;
+                }
+            }
+            catch (System.Exception e)
+            {
+                return -1;
+            }
+        }
         public List<DirItem> GetFileNames(string dirID)
         {
             List<DirItem> ids = new List<DirItem>();
             OleDbCommand cmd = m_conn.CreateCommand();
-            cmd.CommandText = string.Format("SELECT * FROM File WHERE DirID = {0}", dirID);
+            cmd.CommandText = string.Format("SELECT * FROM File WHERE FatherID = {0}", dirID);
             try
             {
                 OleDbDataReader reader = cmd.ExecuteReader();
@@ -356,6 +398,8 @@ namespace AccessDBTree
                 return false;
             }
         }
+
+       
         public byte[] ReadFile(string strFileID)
         {
             byte[] ret = null;
