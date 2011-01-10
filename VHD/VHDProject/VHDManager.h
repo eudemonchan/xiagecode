@@ -4,15 +4,19 @@
 #pragma comment(lib,"VirtDisk.lib")
 class CVHDManager
 {
+private:	
+	DWORD CreateFixed(PCWSTR path,
+				ULONGLONG size,
+				VIRTUAL_DISK_ACCESS_MASK accessMask,
+				__in_opt PCWSTR source,
+				__in_opt PSECURITY_DESCRIPTOR securityDescriptor,
+				__in_opt OVERLAPPED* overlapped);
 public:
 	CVHDManager(void);
 	~CVHDManager(void);
-	DWORD CreateFixed(PCWSTR path,
-                      ULONGLONG size,
-                      VIRTUAL_DISK_ACCESS_MASK accessMask,
-                      __in_opt PCWSTR source,
-                      __in_opt PSECURITY_DESCRIPTOR securityDescriptor,
-                      __in_opt OVERLAPPED* overlapped);
+
+	DWORD CreateFixedAsync( PCWSTR path, ULONGLONG size);
+	DWORD CreateFixedSync( PCWSTR path, ULONGLONG size);
 	DWORD Open(PCWSTR path,
 		VIRTUAL_DISK_ACCESS_MASK accessMask =VIRTUAL_DISK_ACCESS_ATTACH_RW,
 		OPEN_VIRTUAL_DISK_FLAG flags =OPEN_VIRTUAL_DISK_FLAG_NONE, // OPEN_VIRTUAL_DISK_FLAG_NONE
@@ -31,5 +35,11 @@ public:
 	//DWORD GetParentLocation(__out bool& resolved,
 	//	__out CAtlArray<CString>& paths);
 	HANDLE m_h;
+	ULONGLONG GetTotalSize();
+	ULONGLONG GetCurrentSize();
+	DWORD GetLastErrorCode();
+private:
+	OVERLAPPED m_ol;
+	DWORD m_dwLastError;
 };
 

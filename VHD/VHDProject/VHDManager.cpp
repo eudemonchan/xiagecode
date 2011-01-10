@@ -8,6 +8,7 @@
 CVHDManager::CVHDManager(void)
 {
 	m_h = NULL;
+	m_dwLastError = 0;
 }
 
 
@@ -49,7 +50,7 @@ DWORD CVHDManager::CreateFixed(PCWSTR path,
         parameters.Version1.SectorSizeInBytes = CREATE_VIRTUAL_DISK_PARAMETERS_DEFAULT_SECTOR_SIZE;
         parameters.Version1.SourcePath = source;
 
-        return ::CreateVirtualDisk(&storageType,
+        if( ERROR_SUCCESS != ::CreateVirtualDisk(&storageType,
                                    path,
                                    accessMask,
                                    securityDescriptor,
@@ -57,17 +58,22 @@ DWORD CVHDManager::CreateFixed(PCWSTR path,
                                    0, // no provider-specific flags
                                    &parameters,
                                    overlapped,
-                                   &m_h);
-    }    
+                                   &m_h) )
+		{
+			m_dwLastError = GetLastError();
+			return FALSE;
+		}
+		return TRUE;
+  }    
 
-DWORD CVHDManager::Open(PCWSTR path,
+BOOL CVHDManager::Open(PCWSTR path,
 	VIRTUAL_DISK_ACCESS_MASK accessMask,
 	OPEN_VIRTUAL_DISK_FLAG flags, // OPEN_VIRTUAL_DISK_FLAG_NONE
 	ULONG readWriteDepth) // OPEN_VIRTUAL_DISK_RW_DEPTH_DEFAULT
 {
 	if ( m_h != NULL )
 	{
-		return ERROR_SUCCESS;
+		return TRUE;
 	}
 	assert(0 == m_h);
 	assert(0 != path);
@@ -88,12 +94,17 @@ DWORD CVHDManager::Open(PCWSTR path,
 
 	parameters.Version1.RWDepth = readWriteDepth;
 
-	return ::OpenVirtualDisk(&storageType,
+	if ( ERROR_SUCCESS !=  ::OpenVirtualDisk(&storageType,
 		path,
 		accessMask,
 		flags,
 		&parameters,
-		&m_h);
+		&m_h))
+	{
+		m_dwLastError = GetLastError();
+		return FALSE;
+	}
+	return TRUE;
 }
 DWORD CVHDManager::Attach(ATTACH_VIRTUAL_DISK_FLAG flags,
 	__in_opt PSECURITY_DESCRIPTOR securityDescriptor,
@@ -158,6 +169,17 @@ void CVHDManager::Close()
 		CloseHandle(m_h);
 		m_h = NULL;
 	}
+}
+
+BOOL CVHDManager::CreateFixedAsync( PCWSTR path, ULONGLONG size)
+{
+	Zero
+
+	CreateFixed( path, size, VIRTUAL_DISK_ACCESS_ALL, NULL, NULL, &m_ol);
+}
+BOOL CVHDManager::CreateFixedSync( PCWSTR path, ULONGLONG size)
+{
+
 }
 //DWORD CVHDManager::GetParentLocation(__out bool& resolved,
 //	__out CAtlArray<CString>& paths)
