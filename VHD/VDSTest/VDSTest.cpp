@@ -53,7 +53,8 @@ void EnumerateDisks(IVdsPack* pPack)
 		{
 			GUID diskID;
 			CLSIDFromString( L"{E60C853F-7F00-4268-83B9-A42F14D05DD3}", &diskID );
-			pPack->AddDisk( diskID, VDS_PST_MBR, TRUE );
+			hResult = pPack->AddDisk( diskID, VDS_PST_MBR, TRUE );
+			DWORD kk = HRESULT_FROM_WIN32(hResult);
 			return;
 		}
 		for (int i = 0; i < pNumberOfPartitions;i++)
