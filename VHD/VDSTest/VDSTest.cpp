@@ -192,6 +192,12 @@ void exploreVDiskProvider(IVdsVdProvider *pVdProvider)
 		printf("-> Disk Id=%ws\n", uuid);         
 		printf("-> Disk Device Name=%ws\n", vdiskProperties.pDeviceName);         
 		printf("-> Disk Path=%ws\n", vdiskProperties.pPath);          // Get the disk instance from the virtual disk         
+		IVdsOpenVDisk *pOpen;
+		hResult = pVDisk->Open(VIRTUAL_DISK_ACCESS_ALL,OPEN_VIRTUAL_DISK_FLAG_NONE,1,&pOpen);
+		if ( SUCCEEDED(hResult))
+		{
+			pOpen->Detach(DETACH_VIRTUAL_DISK_FLAG_NONE,0);
+		}
 		hResult = pVdProvider->GetDiskFromVDisk(pVDisk, &pDisk);         
 		if (FAILED(hResult)) goto bail;          
 		_SafeRelease(pVDisk);          
@@ -200,6 +206,51 @@ void exploreVDiskProvider(IVdsVdProvider *pVdProvider)
 		if (FAILED(hResult)) goto bail;          
 		printf("-> Disk Name=%ws\n", diskProperties.pwszName);         
 		printf("-> Disk Friendly Name=%ws\n", diskProperties.pwszFriendlyName);     
+	}      
+	return;  
+bail:     printf("Failed hr=%x\n", hResult); 
+} 
+
+void exploreVDiskProvider2(IVdsVdProvider *pVdProvider) 
+{     
+	HRESULT hResult;     
+	ULONG ulFetched = 0;      
+	IEnumVdsObject *pVDiskEnum = NULL;     
+	IVdsVDisk *pVDisk = NULL;     
+	IUnknown *pUnknown = NULL;     
+	IVdsVolume *pVolume = NULL;     
+	VDS_VDISK_PROPERTIES vdiskProperties = { 0 };     
+	TCHAR *uuid = NULL;     
+	IVdsDisk *pDisk = NULL;     
+	IVdsAdvancedDisk *pAdvanceDisk = NULL;
+	VDS_DISK_PROP diskProperties = { 0 };      // Query the disks handled by the provider     
+	hResult = pVdProvider->QueryVDisks(&pVDiskEnum);     
+	if (FAILED(hResult)) goto bail;      
+	printf("Querying virtual disks...\n");      // Iterate over virtual disks     
+	while(1)      
+	{         
+		ulFetched = 0;         
+		hResult = pVDiskEnum->Next(1, &pUnknown, &ulFetched);         
+		if (hResult == S_FALSE) 
+		{             
+			break;         
+		}          
+		if (FAILED(hResult)) goto bail;          // Cast the current value to a disk         
+		hResult = pUnknown->QueryInterface(IID_IVdsAdvancedDisk, (void **) &pAdvanceDisk);         
+		if (FAILED(hResult)) goto bail;          
+		
+		
+		hResult = pVdProvider->GetDiskFromVDisk(pVDisk, &pDisk);         
+		if (FAILED(hResult)) goto bail;  
+		
+//		IVdsVolume *pVol = pDisk->
+		_SafeRelease(pDisk);
+		_SafeRelease(pVDisk);          
+		_SafeRelease(pUnknown);          // Get the disk's properties and display some of them         
+		//hResult = pDisk->GetProperties(&diskProperties);         
+		//if (FAILED(hResult)) goto bail;          
+		//printf("-> Disk Name=%ws\n", diskProperties.pwszName);         
+		//printf("-> Disk Friendly Name=%ws\n", diskProperties.pwszFriendlyName);     
 	}      
 	return;  
 bail:     printf("Failed hr=%x\n", hResult); 
@@ -236,12 +287,53 @@ void EnumerateSoftwareProviders(IVdsService *pService)
 				hResult = pVdsVdProvider->AddVDisk( (PVIRTUAL_STORAGE_TYPE)&type, strVhdPath, (IVdsVDisk**)&pVdisk );
 				if ( SUCCEEDED(hResult))
 				{
+
+					IVdsOpenVDisk *pOpenVdisk = NULL;
+					hResult = pVdisk->Open(VIRTUAL_DISK_ACCESS_ALL, OPEN_VIRTUAL_DISK_FLAG_NONE, 1, &pOpenVdisk);
+					if ( SUCCEEDED(hResult) || FAILED(hResult))
+					{
+						IVdsAsync *pWait = NULL;
+						hResult = pOpenVdisk->Attach(NULL,ATTACH_VIRTUAL_DISK_FLAG_NONE,0,0, &pWait);
+						if ( SUCCEEDED(hResult) )
+						{
+						HRESULT res;
+						VDS_ASYNC_OUTPUT kk;
+
+						pWait->Wait(&res, &kk);
+						_SafeRelease(pWait);
+						}
+
+						
+						////////这里应该初始化
+						//exploreVDiskProvider2(pVdsVdProvider);
+						IVdsVolume *pVol = NULL;
+						hResult = pVdisk->GetHostVolume(&pVol);
+						if ( SUCCEEDED(hResult) )
+						{
+							GUID kkID;
+							CLSIDFromString(L"{C2BEB7D8-1D9A-4FA0-A90A-3A67B2245BCB}", &kkID);
+							IVdsAsync *pWait2 = NULL;
+							hResult = pVol->AddPlex(kkID, &pWait2);
+							if ( SUCCEEDED(hResult) )
+							{
+								printf("ddddd");
+							}
+							_SafeRelease(pWait2);
+						}
+						_SafeRelease(pVol);
+						pOpenVdisk->Detach(DETACH_VIRTUAL_DISK_FLAG_NONE,0);
+						
+					}
+					//pOpenVdisk->Detach(DETACH_VIRTUAL_DISK_FLAG_NONE,0);
+					_SafeRelease(pOpenVdisk);
+					_SafeRelease(pVdisk);
+					_SafeRelease(pVdsVdProvider);
+					return;
 					printf("dddd");
 				}
 				
 			}
-
-			exploreVDiskProvider(pVdsVdProvider);
+			
 			
 		}
 		//EnumeratePacks(pVdsVdProvider);
@@ -251,54 +343,94 @@ void EnumerateSoftwareProviders(IVdsService *pService)
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	HRESULT hResult;
-	IVdsService *pService = NULL;
-	IVdsServiceLoader *pLoader = NULL;
+	//HRESULT hResult;
+	//IVdsService *pService = NULL;
+	//IVdsServiceLoader *pLoader = NULL;
 
-	// For this, you first get a pointer to the VDS Loader
-	// Launch the VDS service. 
-	//
+	//// For this, you first get a pointer to the VDS Loader
+	//// Launch the VDS service. 
+	////
 
-	hResult = CoInitialize(NULL);
+	//hResult = CoInitialize(NULL);
 
-	if (SUCCEEDED(hResult)) 
-	{
-		hResult = CoCreateInstance(CLSID_VdsLoader,
-			NULL,
-			CLSCTX_LOCAL_SERVER,
-			IID_IVdsServiceLoader,
-			(void **) &pLoader);
+	//if (SUCCEEDED(hResult)) 
+	//{
+	//	hResult = CoCreateInstance(CLSID_VdsLoader,
+	//		NULL,
+	//		CLSCTX_LOCAL_SERVER,
+	//		IID_IVdsServiceLoader,
+	//		(void **) &pLoader);
 
-		// 
-		// And then load VDS on the local computer.
-		//
-		if (SUCCEEDED(hResult)) 
-		{
-			hResult = pLoader->LoadService(NULL, &pService);
-		}
+	//	// 
+	//	// And then load VDS on the local computer.
+	//	//
+	//	if (SUCCEEDED(hResult)) 
+	//	{
+	//		hResult = pLoader->LoadService(NULL, &pService);
+	//	}
 
-		//
-		// You're done with the Loader interface at this point.
-		//
-		_SafeRelease(pLoader); 
+	//	//
+	//	// You're done with the Loader interface at this point.
+	//	//
+	//	_SafeRelease(pLoader); 
 
-		if (SUCCEEDED(hResult)) 
-		{
-			hResult = pService->WaitForServiceReady();
-			if (SUCCEEDED(hResult)) 
-			{
-				printf("VDS Service Loaded");
-			}
-			EnumerateSoftwareProviders(pService); 
-			getchar();
-			return 0;
-		} 
-		else 
-		{
-			printf("VDS Service failed hr=%x\n",hResult);
+	//	if (SUCCEEDED(hResult)) 
+	//	{
+	//		hResult = pService->WaitForServiceReady();
+	//		if (SUCCEEDED(hResult)) 
+	//		{
+	//			printf("VDS Service Loaded");
+	//		}
+	//		EnumerateSoftwareProviders(pService); 
+	//		getchar();
+	//		return 0;
+	//	} 
+	//	else 
+	//	{
+	//		printf("VDS Service failed hr=%x\n",hResult);
+	//	}
+	//}
+	//getchar();
+
+	HRESULT hResult;     
+	IVdsService* pService = NULL;     
+	IVdsServiceLoader *pLoader = NULL;     //Launch the VDS Service     
+	hResult = CoInitializeEx(NULL, COINIT_MULTITHREADED);     // Initialize COM security     
+	CoInitializeSecurity(  NULL,       // Allow *all* VSS writers to communicate back!         
+		-1,        // Default COM authentication service         
+		NULL,       // Default COM authorization service         
+		NULL,       // reserved parameter         
+		RPC_C_AUTHN_LEVEL_PKT_PRIVACY, // Strongest COM authentication level         
+		RPC_C_IMP_LEVEL_IMPERSONATE,  // Minimal impersonation abilities          
+		NULL,       // Default COM authentication settings         
+		EOAC_NONE,      // No special options         
+		NULL       // Reserved parameter         
+		);      
+	if( SUCCEEDED(hResult) )     
+	{         
+		hResult = CoCreateInstance( 
+				CLSID_VdsLoader, 
+				NULL, 
+				CLSCTX_LOCAL_SERVER,  
+				IID_IVdsServiceLoader, 
+				(void**) &pLoader             
+				);          //if succeeded load VDS on local machine         
+		if( SUCCEEDED(hResult) )             
+		pLoader->LoadService(NULL, &pService);         
+		//Done with Loader now release VDS Loader interface         
+		_SafeRelease(pLoader);          
+		if( SUCCEEDED(hResult) )         
+		{             
+			hResult = pService->WaitForServiceReady();             
+			if ( SUCCEEDED(hResult) )             
+			{                 
+				EnumerateSoftwareProviders(pService);                 
+				getchar();
+				return 0;                    
+			}         
 		}
 	}
-	getchar();
+	return -1; 
 }
 
 
