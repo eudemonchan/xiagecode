@@ -130,7 +130,7 @@ void EnumeratePacks(IVdsSwProvider* pProvider)
 		if (ulFetched == 0) 
 			break;
 		count++;
-		if ( count == 2 )
+		/*if ( count == 2 )
 		{
 			IVdsPack *pPack;
 			hResult = pProvider->CreatePack( &pPack);
@@ -144,7 +144,7 @@ void EnumeratePacks(IVdsSwProvider* pProvider)
 				getchar();
 				return;
 			}
-		}
+		}*/
 		hResult = ppObjUnk->QueryInterface(IID_IVdsPack, (void**)&pVdsPack);         
 		VDS_PACK_PROP packProp;         
 		pVdsPack->GetProperties(&packProp);         
@@ -255,6 +255,22 @@ void exploreVDiskProvider2(IVdsVdProvider *pVdProvider)
 	return;  
 bail:     printf("Failed hr=%x\n", hResult); 
 } 
+void EnumerateSoftwareProviders2(IVdsService* pService) 
+{     
+	HRESULT hResult;     
+	ULONG ulFetched = 0;     
+	IUnknown* ppObjUnk ;     
+	IEnumVdsObject* pEnumVdsObject = NULL;     
+	IVdsSwProvider* pVdsSwProvider = NULL;      
+	hResult = pService->QueryProviders(VDS_QUERY_SOFTWARE_PROVIDERS, &pEnumVdsObject);     
+	while( true)     
+	{         
+		hResult = pEnumVdsObject->Next(1, &ppObjUnk, &ulFetched);         
+		if (ulFetched == 0) break;          
+		hResult = ppObjUnk->QueryInterface(IID_IVdsSwProvider,(void**)&pVdsSwProvider);         
+		EnumeratePacks(pVdsSwProvider);     
+	} 
+}
 
 void EnumerateSoftwareProviders(IVdsService *pService)
 {
@@ -283,7 +299,7 @@ void EnumerateSoftwareProviders(IVdsService *pService)
 			{
 				IVdsVDisk *pVdisk = NULL;
 				WCHAR strVhdPath[MAX_PATH] = {0};
-				wcscpy( strVhdPath, L"d:\\11.vhd");
+				wcscpy( strVhdPath, L"e:\\11.vhd");
 				hResult = pVdsVdProvider->AddVDisk( (PVIRTUAL_STORAGE_TYPE)&type, strVhdPath, (IVdsVDisk**)&pVdisk );
 				if ( SUCCEEDED(hResult))
 				{
@@ -306,7 +322,7 @@ void EnumerateSoftwareProviders(IVdsService *pService)
 						
 						////////这里应该初始化
 						//exploreVDiskProvider2(pVdsVdProvider);
-						IVdsVolume *pVol = NULL;
+						/*IVdsVolume *pVol = NULL;
 						hResult = pVdisk->GetHostVolume(&pVol);
 						if ( SUCCEEDED(hResult) )
 						{
@@ -320,7 +336,10 @@ void EnumerateSoftwareProviders(IVdsService *pService)
 							}
 							_SafeRelease(pWait2);
 						}
-						_SafeRelease(pVol);
+						_SafeRelease(pVol);*/
+						EnumerateSoftwareProviders2(pService);
+						getchar();
+						
 						pOpenVdisk->Detach(DETACH_VIRTUAL_DISK_FLAG_NONE,0);
 						
 					}
