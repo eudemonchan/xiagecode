@@ -211,12 +211,22 @@ void CVHDProjectDlg::OnBnClickedBtnStart()
 	//	return;
 	//}
 	//MessageBox(L"³É¹¦!");
-	if( m_vhd.Open(L"d:\\1g.vhd") )
+	if( m_vhd.Open(L"d:\\11.vhd") )
 	{
-		if( m_vhd.Attach() )
+		/*if( m_vhd.Attach() )
 		{
 			return;
+		}*/
+		ULONG kk = 0;
+		kk = m_vhd.QuerySize();
+		if ( kk == 0 )
+		{
+			CString str;
+			str.Format(L"%d", m_vhd.GetLastErrorCode());
+			MessageBox(str);
+			return;
 		}
+		m_vhd.Close();
 	}
 	MessageBox(L"Ê§°Ü");
 }

@@ -102,6 +102,45 @@ void EnumerateVolumes(IVdsPack* pPack)
 		pVdsVolume->GetProperties(&volProp);         
 		printf("Vol name  : %S\n", volProp.pwszName);         
 		printf("Vol health: %d\n", volProp.health);     
+		IVdsVolumeMF *pVolFormat = NULL;
+		hResult = pVdsVolume->QueryInterface(IID_IVdsVolumeMF, (void**)&pVolFormat);
+		if ( SUCCEEDED(hResult))
+		{
+			WCHAR volName[MAX_PATH] = {0};
+			wcscpy( volName, L"TestDisk");
+
+			IVdsAsync *pFormatopera = NULL;
+			hResult = pVolFormat->Format(VDS_FST_NTFS, volName, 512, FALSE, TRUE, FALSE, &pFormatopera);
+			if ( SUCCEEDED(hResult) )
+			{
+				HRESULT hFormatRes;
+				VDS_ASYNC_OUTPUT kk;
+				pFormatopera->Wait(&hFormatRes, &kk);
+				_SafeRelease(pFormatopera);
+				if ( SUCCEEDED(pFormatopera))
+				{
+					printf("格式化成功！\n");
+					WCHAR volPath[MAX_PATH] = {0};
+					wcscpy( volPath, L"X:\\");
+					hResult = pVolFormat->AddAccessPath(volPath);
+					if(SUCCEEDED(hResult))
+					{
+						printf("设置盘符成功！\n");
+					}
+				}
+				/*if ( SUCCEEDED(hFormatRes))
+				{
+				printf("format success!\n");
+				hResult = pAdvanceDisk->AssignDriveLetter(0,L'X');
+				if ( SUCCEEDED(hResult))
+				{
+				printf("good ,you can see result in explorer!\n");
+				}
+				}*/
+			}
+			_SafeRelease(pVolFormat);
+
+		}
 	} 
 	printf("vol nums:%d", count);
 } 
@@ -236,14 +275,37 @@ void exploreVDiskProvider2(IVdsVdProvider *pVdProvider)
 			break;         
 		}          
 		if (FAILED(hResult)) goto bail;          // Cast the current value to a disk         
-		hResult = pUnknown->QueryInterface(IID_IVdsAdvancedDisk, (void **) &pAdvanceDisk);         
-		if (FAILED(hResult)) goto bail;          
+		hResult = pUnknown->QueryInterface(IID_IVdsVDisk, (void **) &pVDisk);         
+		if (FAILED(hResult)) continue;
 		
 		
 		hResult = pVdProvider->GetDiskFromVDisk(pVDisk, &pDisk);         
 		if (FAILED(hResult)) goto bail;  
+		hResult = pDisk->QueryInterface(IID_IVdsAdvancedDisk, (void**)&pAdvanceDisk);
+		if ( SUCCEEDED(hResult) )
+		{
+			CREATE_PARTITION_PARAMETERS params;
+			params.style = VDS_PST_MBR;
+			params.MbrPartInfo.partitionType = PARTITION_IFS;
+			params.MbrPartInfo.bootIndicator = FALSE;
+			IVdsAsync *pAsyOpera = NULL;
+			hResult = pAdvanceDisk->CreatePartition( 0, 80*1024*1024, &params, &pAsyOpera);
+			if ( SUCCEEDED(hResult))
+			{
+				HRESULT res;
+				VDS_ASYNC_OUTPUT kk;
+
+				pAsyOpera->Wait(&res, &kk);
+				_SafeRelease(pAsyOpera);
+				if(SUCCEEDED(res))
+				{
+					printf("create partition succeed!");
+				}
+			}
+		}
 		
-//		IVdsVolume *pVol = pDisk->
+		//IVdsVolume *pVol = 
+		_SafeRelease(pAdvanceDisk);
 		_SafeRelease(pDisk);
 		_SafeRelease(pVDisk);          
 		_SafeRelease(pUnknown);          // Get the disk's properties and display some of them         
@@ -279,6 +341,8 @@ void EnumerateSoftwareProviders(IVdsService *pService)
 	IUnknown *ppObjUnk;
 	IEnumVdsObject *pEnumVdsObject = NULL;
 	IVdsVdProvider *pVdsVdProvider = NULL;
+	IVdsAdvancedDisk *pAdvanceDisk= NULL;
+	IVdsDisk *pDisk = NULL;
 	hResult = pService->QueryProviders(VDS_QUERY_VIRTUALDISK_PROVIDERS, &pEnumVdsObject);
 	int count = 0;
 	while (true)
@@ -299,7 +363,7 @@ void EnumerateSoftwareProviders(IVdsService *pService)
 			{
 				IVdsVDisk *pVdisk = NULL;
 				WCHAR strVhdPath[MAX_PATH] = {0};
-				wcscpy( strVhdPath, L"e:\\11.vhd");
+				wcscpy( strVhdPath, L"d:\\11.vhd");
 				hResult = pVdsVdProvider->AddVDisk( (PVIRTUAL_STORAGE_TYPE)&type, strVhdPath, (IVdsVDisk**)&pVdisk );
 				if ( SUCCEEDED(hResult))
 				{
@@ -318,32 +382,238 @@ void EnumerateSoftwareProviders(IVdsService *pService)
 						pWait->Wait(&res, &kk);
 						_SafeRelease(pWait);
 						}
+						//pVdsVdProvider->QueryVDisks()
+						
+						if ( SUCCEEDED(hResult) )
+						{
+							//获取VsDisk
+							hResult = pVdsVdProvider->GetDiskFromVDisk( pVdisk, &pDisk);
+							if ( SUCCEEDED(hResult))
+							{
+								//获取AdvancedDisk
+								hResult = pDisk->QueryInterface(IID_IVdsAdvancedDisk, (void**)&pAdvanceDisk);
+								if ( SUCCEEDED(hResult) )
+								{
+									LPWSTR pDiskName2 = NULL;
+									hResult = pVdisk->GetDeviceName(&pDiskName2);
+									wprintf(pDiskName2);
 
+									ULARGE_INTEGER a,b,c;
+									GetDiskFreeSpaceEx(pDiskName2, &a, &b, &c);
+									CREATE_PARTITION_PARAMETERS params;
+									params.style = VDS_PST_MBR;
+									params.MbrPartInfo.partitionType = PARTITION_IFS;
+									params.MbrPartInfo.bootIndicator = FALSE;
+									IVdsAsync *pAsyOpera = NULL;
+									hResult = pAdvanceDisk->CreatePartition( 0, 100*1024*1024, &params, &pAsyOpera);
+									if ( SUCCEEDED(hResult))
+									{
+										HRESULT res;
+										VDS_ASYNC_OUTPUT kk;
+
+										pAsyOpera->Wait(&res, &kk);
+										_SafeRelease(pAsyOpera);
+										if(SUCCEEDED(res))
+										{
+											printf("create partition succeed!");
+										}
+									}
+
+									//pAdvanceDisk->GetPartitionProperties()
+
+									LONG numPartitions = 0;
+									VDS_PARTITION_PROP *Prop = NULL;
+									hResult = pAdvanceDisk->QueryPartitions(&Prop, &numPartitions);
+									VDS_PARTITION_PROP *pTemp = Prop;
+									if ( SUCCEEDED(hResult))
+									{
+										for ( int i = 0; i < numPartitions; i++ )
+										{
+											printf("分区号码：%d\n", pTemp->ulPartitionNumber);
+											pTemp++;
+										}
+									}
+									CoTaskMemFree(Prop);
+
+									LPWSTR pDiskName = NULL;
+									hResult = pVdisk->GetDeviceName(&pDiskName);
+									wprintf(pDiskName);
+
+									printf("\n");
+									if( SetVolumeMountPoint( L"X:\\", pDiskName) )
+									{
+										printf("设置成功！\n");
+									}
+									else
+									{
+										printf("设置vol失败：%d\n", GetLastError());
+									}
+
+									IVdsPack *pVdsPack = NULL;
+									hResult = pDisk->GetPack(&pVdsPack);
+									if ( SUCCEEDED(hResult) )
+									{
+
+										printf("GetPack Succeed!\n");
+										EnumerateVolumes(pVdsPack);
+
+
+										/*VDS_INPUT_DISK diskArray;
+										CLSIDFromString( L"{EC984AEC-A0F9-47e9-901F-71415A66345B}", &diskArray.diskId );
+										diskArray.memberIdx = 0;
+										CLSIDFromString( L"{DE38D56A-77C6-4FBC-8336-949E9090523B}", &diskArray.plexId );
+										diskArray.ullSize = 80*1024*1024;
+										IVdsAsync *pCVol = NULL;
+										hResult = pVdsPack->CreateVolume(VDS_VT_SIMPLE, &diskArray, 1, 0, &pCVol);
+										if ( SUCCEEDED(hResult))
+										{
+											HRESULT res;
+											VDS_ASYNC_OUTPUT kk;
+											pCVol->Wait(&res, &kk);
+											if ( SUCCEEDED(res))
+											{
+												printf("Create Vol Succeed!\n");
+
+												}
+										}*/
+									}
+									else
+									{
+										printf("GetPack failed!\n");
+									}
+									hResult = pAdvanceDisk->AssignDriveLetter(0,L'X');
+									if ( SUCCEEDED(hResult))
+									{
+										printf("good ,you can see result in explorer!\n");
+									}
+
+									IVdsVolume *pVol = NULL;
+									hResult = pVdisk->GetHostVolume(&pVol);
+									if ( SUCCEEDED(hResult) )
+									{
+										/*GUID kkID;
+										CLSIDFromString(L"{C2BEB7D8-1D9A-4FA0-A90A-3A67B2245BCB}", &kkID);
+										IVdsAsync *pWait2 = NULL;
+										hResult = pVol->AddPlex(kkID, &pWait2);
+										if ( SUCCEEDED(hResult) )
+										{
+											printf("ddddd");
+										}
+										_SafeRelease(pWait2);*/
+										IVdsVolumeMF *pVolFormat = NULL;
+										hResult = pVdisk->QueryInterface( IID_IVdsVolumeMF, (void**)&pVolFormat);
+										if ( SUCCEEDED(hResult))
+										{
+											WCHAR volName[MAX_PATH] = {0};
+											wcscpy( volName, L"TestDisk");
+
+											IVdsAsync *pFormatopera = NULL;
+											hResult = pVolFormat->Format(VDS_FST_NTFS, volName, 512, FALSE, TRUE, FALSE, &pFormatopera);
+											if ( SUCCEEDED(hResult) )
+											{
+												HRESULT hFormatRes;
+												VDS_ASYNC_OUTPUT kk;
+												pFormatopera->Wait(&hFormatRes, &kk);
+												_SafeRelease(pFormatopera);
+												if ( SUCCEEDED(hFormatRes))
+												{
+													printf("format success!\n");
+													hResult = pAdvanceDisk->AssignDriveLetter(0,L'X');
+													if ( SUCCEEDED(hResult))
+													{
+														printf("good ,you can see result in explorer!\n");
+													}
+												}
+											}
+										}
+
+										_SafeRelease(pVolFormat);
+										printf("ddddddddddd");
+									}
+									_SafeRelease(pVol);
+									/*WCHAR volName[MAX_PATH] = {0};
+									wcscpy( volName, L"TestDisk");
+
+									IVdsAsync *pFormatopera = NULL;
+									hResult = pAdvanceDisk->FormatPartition( 1, VDS_FST_NTFS, volName, 512, FALSE, TRUE, FALSE, &pFormatopera);
+									if ( SUCCEEDED(hResult) )
+									{
+									HRESULT hFormatRes;
+									VDS_ASYNC_OUTPUT kk;
+									pFormatopera->Wait(&hFormatRes, &kk);
+									_SafeRelease(pFormatopera);
+									if ( SUCCEEDED(hFormatRes))
+									{
+									printf("format success!\n");
+									hResult = pAdvanceDisk->AssignDriveLetter(0,L'X');
+									if ( SUCCEEDED(hResult))
+									{
+									printf("good ,you can see result in explorer!\n");
+									}
+									}
+									}*/
+									
+								}
+								_SafeRelease(pAdvanceDisk);
+							}
+							_SafeRelease(pDisk);
+							/*printf("name:\n");
+							LPWSTR pDiskName = NULL;
+							hResult = pVdisk->GetDeviceName(&pDiskName);
+							wprintf(pDiskName);
+							printf("\n");
+							HANDLE hDisk = ::CreateFile(pDiskName, FILE_ALL_ACCESS, 0, NULL, OPEN_EXISTING,  FILE_ATTRIBUTE_NORMAL, NULL);
+							if ( hDisk == INVALID_HANDLE_VALUE )
+							{
+							printf("\n错误是:%d\n", GetLastError());
+							}
+							else
+							{
+							CREATE_DISK createDisk;
+							createDisk.PartitionStyle = PARTITION_STYLE_MBR;
+							createDisk.Mbr.Signature = 55;
+							DWORD retSize = 0;
+							if( ::DeviceIoControl(hDisk, IOCTL_DISK_CREATE_DISK, &createDisk, sizeof(createDisk), NULL, 0, &retSize, NULL ) )
+							{
+							printf("DIC OK");
+							}
+							else
+							{
+							printf("DOC Error:%d",GetLastError());
+							}
+
+							printf("\n成功打开设备！\n");
+
+							CloseHandle(hDisk);
+							}*/
+						}
 						
 						////////这里应该初始化
 						//exploreVDiskProvider2(pVdsVdProvider);
-						/*IVdsVolume *pVol = NULL;
-						hResult = pVdisk->GetHostVolume(&pVol);
-						if ( SUCCEEDED(hResult) )
-						{
-							GUID kkID;
-							CLSIDFromString(L"{C2BEB7D8-1D9A-4FA0-A90A-3A67B2245BCB}", &kkID);
-							IVdsAsync *pWait2 = NULL;
-							hResult = pVol->AddPlex(kkID, &pWait2);
-							if ( SUCCEEDED(hResult) )
-							{
-								printf("ddddd");
-							}
-							_SafeRelease(pWait2);
-						}
-						_SafeRelease(pVol);*/
-						EnumerateSoftwareProviders2(pService);
+						//IVdsVolume *pVol = NULL;
+						//hResult = pVdisk->GetHostVolume(&pVol);
+						//if ( SUCCEEDED(hResult) )
+						//{
+						//	/*GUID kkID;
+						//	CLSIDFromString(L"{C2BEB7D8-1D9A-4FA0-A90A-3A67B2245BCB}", &kkID);
+						//	IVdsAsync *pWait2 = NULL;
+						//	hResult = pVol->AddPlex(kkID, &pWait2);
+						//	if ( SUCCEEDED(hResult) )
+						//	{
+						//		printf("ddddd");
+						//	}
+						//	_SafeRelease(pWait2);*/
+						//	printf("ddddddddddd");
+						//}
+						//_SafeRelease(pVol);
+						//EnumerateSoftwareProviders2(pService);
 						getchar();
 						
 						pOpenVdisk->Detach(DETACH_VIRTUAL_DISK_FLAG_NONE,0);
 						
 					}
 					//pOpenVdisk->Detach(DETACH_VIRTUAL_DISK_FLAG_NONE,0);
+
 					_SafeRelease(pOpenVdisk);
 					_SafeRelease(pVdisk);
 					_SafeRelease(pVdsVdProvider);
