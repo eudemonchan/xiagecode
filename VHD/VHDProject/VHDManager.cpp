@@ -456,13 +456,23 @@ int CVHDManager::GetPartitionCount()
 
 BOOL CVHDManager::CreatePartition(ULONGLONG partSize)
 {
+	if ( m_pAdvDisk == NULL )
+	{
+		return FALSE;
+	}
 	CREATE_PARTITION_PARAMETERS params;
 	params.style = VDS_PST_MBR;
 	params.MbrPartInfo.partitionType = PARTITION_IFS;
 	params.MbrPartInfo.bootIndicator = FALSE;
 	IVdsAsync *pAsyOpera = NULL;
+	IVdsAdvancedDisk *pTempDisk = NULL;
 	HRESULT hResult;
-	hResult = m_pAdvDisk->CreatePartition( 1, partSize, &params, &pAsyOpera);
+	//hResult = m_pVdsDisk->QueryInterface(IID_IVdsAdvancedDisk, (void**)&pTempDisk);
+	//if ( FAILED(hResult))
+	//{
+	//	return FALSE;
+	//}
+	hResult = m_pAdvDisk->CreatePartition( 0, partSize, &params, &pAsyOpera);
 	if ( SUCCEEDED(hResult))
 	{
 		HRESULT res;
@@ -476,15 +486,22 @@ BOOL CVHDManager::CreatePartition(ULONGLONG partSize)
 			{
 				m_realStartPos = kk.cp.ullOffset;
 			}
-			hResult = m_pVdsDisk->GetPack(&m_pPack);
-			if ( FAILED(hResult))
-			{
-				return FALSE;
-			}
+			
 			return TRUE;
 		}
 	}
 	return FALSE;
+}
+
+BOOL CVHDManager::SetVdsPackInterface()
+{
+	HRESULT hResult;
+	hResult = m_pVdsDisk->GetPack(&m_pPack);
+	if ( FAILED(hResult))
+	{
+		return FALSE;
+	}
+	return TRUE;
 }
 
 BOOL CVHDManager::SetVolInterface()

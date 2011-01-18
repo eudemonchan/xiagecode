@@ -56,6 +56,7 @@ public:
 	BOOL FormatDisk();
 	BOOL AddLetter(WCHAR letter);
 	BOOL FormatDisk(CString strDiskName);
+	BOOL SetVdsPackInterface();
 	IVdsService *m_pVdsService;
 	IVdsVdProvider *m_pVdsVdProvider;
 	IVdsOpenVDisk *m_pOpenVdisk;

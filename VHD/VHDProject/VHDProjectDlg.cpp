@@ -68,6 +68,8 @@ BEGIN_MESSAGE_MAP(CVHDProjectDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_STOP, &CVHDProjectDlg::OnBnClickedBtnStop)
 	ON_BN_CLICKED(IDC_BTN_CREATE, &CVHDProjectDlg::OnBnClickedBtnCreate)
 	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BTN_STOPDISK, &CVHDProjectDlg::OnBnClickedBtnStopdisk)
+	ON_BN_CLICKED(IDC_BTN_MOUNT, &CVHDProjectDlg::OnBnClickedBtnMount)
 END_MESSAGE_MAP()
 
 
@@ -211,7 +213,7 @@ void CVHDProjectDlg::OnBnClickedBtnStart()
 	//	return;
 	//}
 	//MessageBox(L"成功!");
-	//if( m_vhd.Open(L"d:\\test.vhd") )
+	//if( m_vhd.Open(L"d:\\22.vhd") )
 	//{
 	//	/*if( m_vhd.Attach() )
 	//	{
@@ -230,7 +232,7 @@ void CVHDProjectDlg::OnBnClickedBtnStart()
 	//}
 	//MessageBox(L"失败");
 	m_vhd.ConnectDiskService();
-	m_vhd.MountDisk(L"e:\\test.vhd");
+	m_vhd.MountDisk(L"e:\\22.vhd");
 	m_vhd.UnMountDisk();
 	m_vhd.ReleaseService();
 }
@@ -265,7 +267,7 @@ void CVHDProjectDlg::OnBnClickedBtnStop()
 //	pDlg->m_ol.Internal = STATUS_PENDING;
 //	pDlg->m_ol.hEvent = ::CreateEventA( NULL, TRUE, FALSE, NULL );
 //	//::CreateThread( NULL, 0, CreateProc, this, 0, NULL );
-//	if(ERROR_SUCCESS == pDlg->m_vhd.CreateFixed(L"d:\\11test.vhd", i64, VIRTUAL_DISK_ACCESS_CREATE, NULL, NULL, &pDlg->m_ol ) )
+//	if(ERROR_SUCCESS == pDlg->m_vhd.CreateFixed(L"d:\\1122.vhd", i64, VIRTUAL_DISK_ACCESS_CREATE, NULL, NULL, &pDlg->m_ol ) )
 //	{
 //		AfxMessageBox(L"创建失败！");
 //	}
@@ -292,7 +294,7 @@ void CVHDProjectDlg::OnBnClickedBtnCreate()
 	//m_ol.hEvent = NULL;
 	//ZeroMemory( &m_ol, sizeof(OVERLAPPED));
 	//m_ol.Internal = STATUS_PENDING;
-	//if(ERROR_SUCCESS == m_vhd.CreateFixed(L"d:\\11test.vhd", i64, VIRTUAL_DISK_ACCESS_ALL, NULL, NULL, &m_ol ) )
+	//if(ERROR_SUCCESS == m_vhd.CreateFixed(L"d:\\1122.vhd", i64, VIRTUAL_DISK_ACCESS_ALL, NULL, NULL, &m_ol ) )
 	//{
 	//	MessageBox(L"创建失败！");
 	//}
@@ -312,7 +314,7 @@ void CVHDProjectDlg::OnBnClickedBtnCreate()
 		MessageBox(L"磁盘空间不足!");
 		return;
 	}
-	if( !m_vhd.CreateFixedAsync(L"e:\\test.vhd",i64) )
+	if( !m_vhd.CreateFixedAsync(L"e:\\22.vhd",i64) )
 	{
 		CString str;
 		str.Format(L"创建错误，错误码：%d", m_vhd.GetLastErrorCode() );
@@ -352,7 +354,7 @@ void CVHDProjectDlg::OnTimer(UINT_PTR nIDEvent)
 			/*MessageBox(L"成功！");*/
 			if ( m_vhd.ConnectDiskService() )
 			{
-				if( m_vhd.MountDisk(L"e:\\test.vhd") )
+				if( m_vhd.MountDisk(L"e:\\22.vhd") )
 				{
 					if( m_vhd.SetMultipleInterface() )
 					{
@@ -360,7 +362,7 @@ void CVHDProjectDlg::OnTimer(UINT_PTR nIDEvent)
 						{
 							if( m_vhd.InitDisk() )
 							{
-								if( m_vhd.CreatePartition(90*1024*1024) )
+								if( m_vhd.CreatePartition(95*1024*1024) )
 								{
 									if( m_vhd.SetVolInterface() )
 									{
@@ -373,6 +375,36 @@ void CVHDProjectDlg::OnTimer(UINT_PTR nIDEvent)
 											}
 										}
 										
+									}
+								}
+								else
+								{
+									m_vhd.UnMountDisk();
+									m_vhd.ReleaseService();
+									if ( m_vhd.ConnectDiskService() )
+									{
+										if ( m_vhd.MountDisk(L"E:\\22.vhd"))
+										{
+											if ( m_vhd.SetMultipleInterface())
+											{
+												if ( m_vhd.CreatePartition(95*1024*1024))
+												{
+													if ( m_vhd.SetVdsPackInterface() )
+													{
+														if ( m_vhd.SetVolInterface())
+														{
+															if (m_vhd.FormatDisk(L"Test"))
+															{
+																if ( m_vhd.AddLetter(L'R'))
+																{
+																	return;
+																}
+															}
+														}
+													}
+												}
+											}
+										}
 									}
 								}
 							}
@@ -390,4 +422,33 @@ void CVHDProjectDlg::OnTimer(UINT_PTR nIDEvent)
 	//SetDlgItemInt(IDC_STATIC_STATE, process.CurrentValue);
 	//SetDlgItemInt(IDC_STATIC_SECOND, process.CompletionValue);
 	CDialogEx::OnTimer(nIDEvent);
+}
+
+
+void CVHDProjectDlg::OnBnClickedBtnStopdisk()
+{
+	// TODO: Add your control notification handler code here
+	m_vhd.UnMountDisk();
+	m_vhd.ReleaseService();
+}
+
+
+void CVHDProjectDlg::OnBnClickedBtnMount()
+{
+	// TODO: Add your control notification handler code here
+	if ( m_vhd.ConnectDiskService() )
+	{
+		if ( m_vhd.MountDisk(L"E:\\22.vhd"))
+		{
+			if ( m_vhd.SetMultipleInterface())
+			{
+				if ( m_vhd.GetPartitionCount() > 0 )
+				{
+					MessageBox(L"成功！");
+					return;
+				}
+			}
+		}
+	}
+	m_vhd.ReleaseService();
 }

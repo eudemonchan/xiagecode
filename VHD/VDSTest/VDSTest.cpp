@@ -363,7 +363,7 @@ void EnumerateSoftwareProviders(IVdsService *pService)
 			{
 				IVdsVDisk *pVdisk = NULL;
 				WCHAR strVhdPath[MAX_PATH] = {0};
-				wcscpy( strVhdPath, L"d:\\11.vhd");
+				wcscpy( strVhdPath, L"e:\\test.vhd");
 				hResult = pVdsVdProvider->AddVDisk( (PVIRTUAL_STORAGE_TYPE)&type, strVhdPath, (IVdsVDisk**)&pVdisk );
 				if ( SUCCEEDED(hResult))
 				{
@@ -405,7 +405,7 @@ void EnumerateSoftwareProviders(IVdsService *pService)
 									params.MbrPartInfo.partitionType = PARTITION_IFS;
 									params.MbrPartInfo.bootIndicator = FALSE;
 									IVdsAsync *pAsyOpera = NULL;
-									hResult = pAdvanceDisk->CreatePartition( 0, 100*1024*1024, &params, &pAsyOpera);
+									hResult = pAdvanceDisk->CreatePartition( 0, 90*1024*1024, &params, &pAsyOpera);
 									if ( SUCCEEDED(hResult))
 									{
 										HRESULT res;

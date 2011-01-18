@@ -38,4 +38,6 @@ public:
 	OVERLAPPED m_ol;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	CProgressCtrl m_proCtrl;
+	afx_msg void OnBnClickedBtnStopdisk();
+	afx_msg void OnBnClickedBtnMount();
 };
