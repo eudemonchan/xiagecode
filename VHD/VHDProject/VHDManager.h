@@ -51,6 +51,7 @@ public:
 	void ReleaseService();
 	BOOL InitDisk();
 	BOOL CreatePartition(ULONGLONG partSize);
+	CString GetVolumeName();
 	int GetPartitionCount();
 	BOOL FormatDisk();
 	BOOL AddLetter(WCHAR letter);

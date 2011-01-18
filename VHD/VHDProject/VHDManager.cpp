@@ -204,7 +204,7 @@ DWORD CVHDManager::GetLastErrorCode()
 BOOL CVHDManager::CreateFixedAsync( PCWSTR path, ULONGLONG size)
 {
 	ZeroMemory( &m_ol, sizeof(OVERLAPPED));
-	if( !CreateFixed( path, size, VIRTUAL_DISK_ACCESS_ALL, NULL, NULL, &m_ol) )
+	if( !CreateFixed( path, size, VIRTUAL_DISK_ACCESS_CREATE, NULL, NULL, &m_ol) )
 	{
 		if ( GetLastErrorCode() == ERROR_IO_PENDING )
 		{
@@ -395,12 +395,8 @@ BOOL CVHDManager::SetMultipleInterface()
 	{
 		return FALSE;
 	}
-	hr = m_pVdsDisk->GetPack(&m_pPack);
-	if ( FAILED(hr))
-	{
-		return FALSE;
-	}
 	return TRUE;
+
 }
 BOOL CVHDManager::InitDisk()
 {
@@ -466,7 +462,7 @@ BOOL CVHDManager::CreatePartition(ULONGLONG partSize)
 	params.MbrPartInfo.bootIndicator = FALSE;
 	IVdsAsync *pAsyOpera = NULL;
 	HRESULT hResult;
-	hResult = m_pAdvDisk->CreatePartition( 0, partSize, &params, &pAsyOpera);
+	hResult = m_pAdvDisk->CreatePartition( 1, partSize, &params, &pAsyOpera);
 	if ( SUCCEEDED(hResult))
 	{
 		HRESULT res;
@@ -479,6 +475,11 @@ BOOL CVHDManager::CreatePartition(ULONGLONG partSize)
 			if ( kk.type == VDS_ASYNCOUT_CREATEPARTITION)
 			{
 				m_realStartPos = kk.cp.ullOffset;
+			}
+			hResult = m_pVdsDisk->GetPack(&m_pPack);
+			if ( FAILED(hResult))
+			{
+				return FALSE;
 			}
 			return TRUE;
 		}
@@ -522,6 +523,16 @@ BOOL CVHDManager::SetVolInterface()
 	_SafeRelease(ppObjUnk);
 	_SafeRelease(pEnumVdsObject);
 	return FALSE;
+}
+CString CVHDManager::GetVolumeName()
+{
+	LPWSTR pName = NULL;
+	if( SUCCEEDED(m_pVdsVirDisk->GetDeviceName(&pName) ))
+	{
+		CString strTemp = pName;
+		return strTemp;
+	}
+	return L"";
 }
 
 BOOL CVHDManager::AddLetter(WCHAR letter)
@@ -573,9 +584,25 @@ BOOL CVHDManager::FormatDisk(CString strDiskName)
 
 void CVHDManager::ReleaseService()
 {
-	CoUninitialize();
-	_SafeRelease(m_pVdsService);
+	//IVdsService *m_pVdsService;
+	//IVdsVdProvider *m_pVdsVdProvider;
+	//IVdsOpenVDisk *m_pOpenVdisk;
+	//IVdsDisk *m_pVdsDisk;
+	//IVdsVDisk *m_pVdsVirDisk;
+	//IVdsPack *m_pPack;
+	//IVdsAdvancedDisk *m_pAdvDisk;
+	//IVdsVolume *m_pVolume;
+	//IVdsVolumeMF *m_pVolMF;
+	
+	_SafeRelease(m_pVolMF);
+	_SafeRelease(m_pVolume);
 	_SafeRelease(m_pOpenVdisk);
+	_SafeRelease(m_pAdvDisk);
+	_SafeRelease(m_pVdsVirDisk);
+	_SafeRelease(m_pVdsDisk);
+	_SafeRelease(m_pPack);;
+	_SafeRelease(m_pVdsService);
+	CoUninitialize();
 }
 
 

@@ -211,24 +211,28 @@ void CVHDProjectDlg::OnBnClickedBtnStart()
 	//	return;
 	//}
 	//MessageBox(L"成功!");
-	if( m_vhd.Open(L"d:\\11.vhd") )
-	{
-		/*if( m_vhd.Attach() )
-		{
-			return;
-		}*/
-		ULONG kk = 0;
-		kk = m_vhd.QuerySize();
-		if ( kk == 0 )
-		{
-			CString str;
-			str.Format(L"%d", m_vhd.GetLastErrorCode());
-			MessageBox(str);
-			return;
-		}
-		m_vhd.Close();
-	}
-	MessageBox(L"失败");
+	//if( m_vhd.Open(L"d:\\test.vhd") )
+	//{
+	//	/*if( m_vhd.Attach() )
+	//	{
+	//		return;
+	//	}*/
+	//	ULONG kk = 0;
+	//	kk = m_vhd.QuerySize();
+	//	if ( kk == 0 )
+	//	{
+	//		CString str;
+	//		str.Format(L"%d", m_vhd.GetLastErrorCode());
+	//		MessageBox(str);
+	//		return;
+	//	}
+	//	m_vhd.Close();
+	//}
+	//MessageBox(L"失败");
+	m_vhd.ConnectDiskService();
+	m_vhd.MountDisk(L"e:\\test.vhd");
+	m_vhd.UnMountDisk();
+	m_vhd.ReleaseService();
 }
 
 
@@ -261,7 +265,7 @@ void CVHDProjectDlg::OnBnClickedBtnStop()
 //	pDlg->m_ol.Internal = STATUS_PENDING;
 //	pDlg->m_ol.hEvent = ::CreateEventA( NULL, TRUE, FALSE, NULL );
 //	//::CreateThread( NULL, 0, CreateProc, this, 0, NULL );
-//	if(ERROR_SUCCESS == pDlg->m_vhd.CreateFixed(L"d:\\1111.vhd", i64, VIRTUAL_DISK_ACCESS_CREATE, NULL, NULL, &pDlg->m_ol ) )
+//	if(ERROR_SUCCESS == pDlg->m_vhd.CreateFixed(L"d:\\11test.vhd", i64, VIRTUAL_DISK_ACCESS_CREATE, NULL, NULL, &pDlg->m_ol ) )
 //	{
 //		AfxMessageBox(L"创建失败！");
 //	}
@@ -288,7 +292,7 @@ void CVHDProjectDlg::OnBnClickedBtnCreate()
 	//m_ol.hEvent = NULL;
 	//ZeroMemory( &m_ol, sizeof(OVERLAPPED));
 	//m_ol.Internal = STATUS_PENDING;
-	//if(ERROR_SUCCESS == m_vhd.CreateFixed(L"d:\\1111.vhd", i64, VIRTUAL_DISK_ACCESS_ALL, NULL, NULL, &m_ol ) )
+	//if(ERROR_SUCCESS == m_vhd.CreateFixed(L"d:\\11test.vhd", i64, VIRTUAL_DISK_ACCESS_ALL, NULL, NULL, &m_ol ) )
 	//{
 	//	MessageBox(L"创建失败！");
 	//}
@@ -299,17 +303,16 @@ void CVHDProjectDlg::OnBnClickedBtnCreate()
 	//	MessageBox(str);
 	//}
 	ULONGLONG i64 = 1024*1024;
-	i64 *= 1024;
-	i64 *= 8;
+	i64 *= 100;
 
 	ULARGE_INTEGER ulAvailSpace; 
-	GetDiskFreeSpaceEx( L"d:\\", &ulAvailSpace, NULL, NULL );
+	GetDiskFreeSpaceEx( L"e:\\", &ulAvailSpace, NULL, NULL );
 	if ( ulAvailSpace.QuadPart < (i64 + (ULONGLONG)(1024*1024*10) ) )
 	{
 		MessageBox(L"磁盘空间不足!");
 		return;
 	}
-	if( !m_vhd.CreateFixedAsync(L"d:\\1g.vhd",i64) )
+	if( !m_vhd.CreateFixedAsync(L"e:\\test.vhd",i64) )
 	{
 		CString str;
 		str.Format(L"创建错误，错误码：%d", m_vhd.GetLastErrorCode() );
@@ -345,7 +348,42 @@ void CVHDProjectDlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			KillTimer(1);
 			m_proCtrl.SetPos(100);
-			MessageBox(L"成功！");
+			m_vhd.Close();
+			/*MessageBox(L"成功！");*/
+			if ( m_vhd.ConnectDiskService() )
+			{
+				if( m_vhd.MountDisk(L"e:\\test.vhd") )
+				{
+					if( m_vhd.SetMultipleInterface() )
+					{
+						if ( m_vhd.GetPartitionCount() <= 0 )
+						{
+							if( m_vhd.InitDisk() )
+							{
+								if( m_vhd.CreatePartition(90*1024*1024) )
+								{
+									if( m_vhd.SetVolInterface() )
+									{
+										CString volName = m_vhd.GetVolumeName();
+										if (!volName.IsEmpty())
+										{
+											if( m_vhd.FormatDisk(volName) )
+											{
+												m_vhd.AddLetter(L'X');
+											}
+										}
+										
+									}
+								}
+							}
+						}
+					}
+					
+				}
+				
+			}
+			m_vhd.UnMountDisk();
+			m_vhd.ReleaseService();
 		}
 	}
 
