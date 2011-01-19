@@ -279,20 +279,26 @@ BOOL CVHDManager::ConnectDiskService()
 			(void**) &pLoader             
 			);          //if succeeded load VDS on local machine         
 		if( SUCCEEDED(hResult) )             
-			pLoader->LoadService(NULL, &pService);         
-		//Done with Loader now release VDS Loader interface         
-		_SafeRelease(pLoader);          
-		if( SUCCEEDED(hResult) )         
-		{             
-			hResult = pService->WaitForServiceReady();             
-			if ( SUCCEEDED(hResult) )             
-			{                 
+		{	
+			hResult =	pLoader->LoadService(NULL, &pService);         
+			if( SUCCEEDED(hResult) )         
+			{             
+				hResult = pService->WaitForServiceReady();             
+				if ( SUCCEEDED(hResult) )             
+				{       
+					m_pVdsService = pService;               
+					return TRUE;                    
+				}
 				
-				m_pVdsService = pService;               
-				return TRUE;                    
-			}         
+			}
 		}
+		//Done with Loader now release VDS Loader interface         
+		         
+		
 	}
+	_SafeRelease(pService);
+	_SafeRelease(pLoader); 
+	CoUninitialize();
 	return FALSE;
 }
 
@@ -306,7 +312,7 @@ BOOL CVHDManager::UnMountDisk()
 	hr = m_pOpenVdisk->Detach(DETACH_VIRTUAL_DISK_FLAG_NONE, 0 );
 	return SUCCEEDED(hr)?TRUE:FALSE;
 }
-BOOL CVHDManager::MountDisk( CString strDiskPath)
+BOOL CVHDManager::MountDisk( LPCWSTR strDiskPath, BOOL bAttatch /*= TRUE*/)
 {
 	if ( m_pVdsService == NULL )
 	{
@@ -347,6 +353,13 @@ BOOL CVHDManager::MountDisk( CString strDiskPath)
 					hResult = pVdisk->Open(VIRTUAL_DISK_ACCESS_ALL, OPEN_VIRTUAL_DISK_FLAG_NONE, 1, &pOpenVdisk);
 					if ( SUCCEEDED(hResult))
 					{
+						if ( !bAttatch )
+						{
+							m_pVdsVdProvider = pVdsVdProvider;
+							m_pOpenVdisk = pOpenVdisk;
+							m_pVdsVirDisk = pVdisk;
+							return TRUE;
+						}
 						IVdsAsync *pWait = NULL;
 						hResult = pOpenVdisk->Attach(NULL,ATTACH_VIRTUAL_DISK_FLAG_NONE,0,0, &pWait);
 						if ( SUCCEEDED(hResult) )
@@ -396,6 +409,38 @@ BOOL CVHDManager::SetMultipleInterface()
 		return FALSE;
 	}
 	return TRUE;
+
+}
+
+WCHAR CVHDManager::GetDiskLetter()
+{
+	HRESULT hr;
+	if ( m_pPack == NULL )
+	{
+		if( !SetMultipleInterface() )
+		{
+			return L'\0';
+		}
+		if( !SetVdsPackInterface() )
+		if ( FAILED(hr))
+		{
+			return L'\0';
+		}
+	}
+	if( !SetVolInterface() )
+	{
+		return L'\0';
+	}
+	LPWSTR *pDrvLetter = NULL;
+	LONG num;
+	hr = m_pVolMF->QueryAccessPaths( &pDrvLetter, &num);
+	if (SUCCEEDED(hr))
+	{
+		WCHAR dr = *((WCHAR*)(*pDrvLetter));
+		CoTaskMemFree(pDrvLetter);
+		return dr;
+	}
+	return L'\0';
 
 }
 BOOL CVHDManager::InitDisk()
@@ -541,15 +586,21 @@ BOOL CVHDManager::SetVolInterface()
 	_SafeRelease(pEnumVdsObject);
 	return FALSE;
 }
-CString CVHDManager::GetVolumeName()
+BOOL CVHDManager::GetVolumeName(WCHAR *pVolName, ULONG nLen)
 {
 	LPWSTR pName = NULL;
 	if( SUCCEEDED(m_pVdsVirDisk->GetDeviceName(&pName) ))
 	{
-		CString strTemp = pName;
-		return strTemp;
+		if ( wcslen(pName) > nLen -1)
+		{
+			CoTaskMemFree(pName);
+			return FALSE;
+		}
+		ZeroMemory(pVolName, nLen*2);
+		wcscpy( pVolName, pName);
+		return TRUE;
 	}
-	return L"";
+	return FALSE;
 }
 
 BOOL CVHDManager::AddLetter(WCHAR letter)
@@ -571,14 +622,14 @@ BOOL CVHDManager::AddLetter(WCHAR letter)
 }
 
 
-BOOL CVHDManager::FormatDisk(CString strDiskName)
+BOOL CVHDManager::FormatDisk(LPCWSTR strDiskName)
 {
 	if ( m_pVolMF == NULL )
 	{
 		return FALSE;
 	}
 	WCHAR volName[MAX_PATH] = {0};
-	wcscpy( volName, (LPCTSTR)strDiskName);
+	wcscpy( volName, strDiskName);
 	HRESULT hResult;
 	IVdsAsync *pFormatopera = NULL;
 	hResult = m_pVolMF->Format(VDS_FST_NTFS, volName, 512, FALSE, TRUE, FALSE, &pFormatopera);
