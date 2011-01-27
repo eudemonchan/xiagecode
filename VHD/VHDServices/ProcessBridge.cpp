@@ -182,7 +182,10 @@ DWORD WINAPI CPipeServer::thWaitConnect( LPVOID lpParameter )
 				if ( g_pPipeServer->m_pCallBack != NULL && !(g_pPipeServer->m_bUserConnected) )
 				{
 					g_pPipeServer->m_bUserConnected = TRUE;
-					g_pPipeServer->m_pCallBack(1);
+					if (g_pPipeServer->m_pCallBack != NULL )
+					{
+						g_pPipeServer->m_pCallBack(1,(unsigned int)g_pPipeServer);
+					}
 				}
 			}
 			else if ( errCode == ERROR_PIPE_LISTENING )

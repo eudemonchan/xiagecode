@@ -3,8 +3,8 @@
 
 #include "stdafx.h"
 #include "VHDManager.h"
-
-
+#include "ProcessBridge.h"
+#include "SerialBuffer.h"
 
 using namespace std;
 
@@ -70,6 +70,49 @@ int _tmain(int argc, _TCHAR* argv[])
 	return 0;
 }
 
+DWORD WINAPI RecvProc( LPVOID lparam )
+{
+	byte buf[512];
+	CPipeServer *pServer = (CPipeServer*)lparam;
+	CVHDManager manager;
+	while(1)
+	{
+		ZeroMemory( buf, 128);
+		int nRes = pServer->ReadData( buf, 128 );
+		if ( nRes == 1 )
+		{
+			//接收成功
+			int len = *((int*)buf);
+			CSerialBuffer_T serBuffer;
+			serBuffer.WriteData((char*)buf + 4, len);
+			char cmd;
+			serBuffer>>cmd;
+			switch(cmd)
+			{
+				
+			}
+			//解包
+		}
+		else if ( nRes == 0 )
+		{
+			//未收到数据
+			Sleep(100);
+		}
+		else
+		{
+			break;
+		}
+	}
+	return 0;
+}
+void WINAPI Notify( int code, unsigned int param1)
+{
+	if ( code == 1 )
+	{
+		::CreateThread( NULL, 0, RecvProc, (LPVOID)param1, 0, NULL );
+	}
+}
+
 VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 {
 	g_hServiceStatus = RegisterServiceCtrlHandler(szServiceName, HandlerProc);
@@ -79,6 +122,12 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 	{
 		return;
 	}
+	CPipeServer pipeServer;
+	if ( !pipeServer.StartServer(L"VHD_Service_123456", Notify))
+	{
+		OutputDebugString(L"启动管道监听服务失败！");
+		return;
+	}
 
 	g_status.dwCurrentState = SERVICE_RUNNING;
 	g_status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
@@ -86,7 +135,10 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 	g_status.dwCheckPoint = 0;
 	g_status.dwWaitHint = 0;
 	SetServiceStatus(g_hServiceStatus, &g_status);
-	CVHDManager manager;
+
+
+	/*CVHDManager manager;
+
 	if( manager.Open(L"H:\\201119\\myvhd.vhd") == ERROR_SUCCESS )
 	{
 		OutputDebugString(L"open成功！");
@@ -95,7 +147,7 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 			OutputDebugString(L"attach成功！");
 		}
 	}
-	OutputDebugString(L"111111111111");
+	OutputDebugString(L"111111111111");*/
 	while ( g_status.dwCurrentState != SERVICE_STOPPED )
 	{
 		if ( g_status.dwCurrentState == SERVICE_PAUSED )
@@ -106,7 +158,7 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 		OutputDebugString(L"keep alive!");
 		Sleep(1000);
 	}
-	OutputDebugString(L"ddddddddd");
+	/*OutputDebugString(L"ddddddddd");
 	if( manager.Detach() == ERROR_SUCCESS )
 	{
 		OutputDebugString(L"detach成功！");
@@ -117,7 +169,7 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 		wsprintf( errorinfo, L"detach错误码：%d", GetLastError());
 		OutputDebugString(errorinfo);
 	}
-	manager.Close();
+	manager.Close();*/
 	g_status.dwCurrentState = SERVICE_STOPPED;
 	SetServiceStatus(g_hServiceStatus, &g_status);
 }

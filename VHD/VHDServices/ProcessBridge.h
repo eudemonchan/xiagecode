@@ -1,8 +1,8 @@
 #pragma once
 #include "windows.h"
 
-#define PIPE_BUFFER_SIZE  128
-typedef void (WINAPI *P_NOTIFY_CALLBACK) ( int);
+#define PIPE_BUFFER_SIZE  512
+typedef void (WINAPI *P_NOTIFY_CALLBACK) ( int,unsigned int);
 
 class CPipeBase
 {
