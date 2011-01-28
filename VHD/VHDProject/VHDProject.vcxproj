@@ -97,8 +97,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
+    <None Include="res\image1.bin" />
     <None Include="res\VHDProject.ico" />
     <None Include="res\VHDProject.rc2" />
+    <None Include="res\无标题.jpg" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h" />

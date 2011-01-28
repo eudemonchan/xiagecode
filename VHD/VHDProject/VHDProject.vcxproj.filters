@@ -22,6 +22,12 @@
     <None Include="res\VHDProject.ico">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="res\无标题.jpg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\image1.bin">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VHDProject.h">

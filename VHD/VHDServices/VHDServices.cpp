@@ -5,7 +5,8 @@
 #include "VHDManager.h"
 #include "ProcessBridge.h"
 #include "SerialBuffer.h"
-
+#include "shlobj.h"
+#pragma comment(lib,"shell32.lib")
 using namespace std;
 
 VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv );
@@ -20,6 +21,76 @@ int UninstallService(TCHAR * pszServiceName);
 BOOL UnloadNTDriver( TCHAR * szSvrName );
 TCHAR szServiceName[] = L"XiageSendIPService";
 TCHAR szDisplayName[] = L"IpSend";
+
+BOOL GetConfigFilePath(TCHAR *pOutPath)
+{
+	TCHAR appPath[MAX_PATH] = {0};
+	if( !SHGetSpecialFolderPath(NULL, appPath, CSIDL_COMMON_APPDATA, FALSE) )
+	{
+		return FALSE;
+	}
+	_tcscat( appPath, _T("\\XGVhd") );
+	SECURITY_ATTRIBUTES sa;
+	SECURITY_DESCRIPTOR sd;
+
+	InitializeSecurityDescriptor(&sd,SECURITY_DESCRIPTOR_REVISION);
+	SetSecurityDescriptorDacl(&sd,TRUE,NULL,FALSE);
+	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+	sa.bInheritHandle = TRUE;
+	sa.lpSecurityDescriptor = &sd;
+	if ( GetFileAttributes(appPath) == 0xFFFFFFFF )
+	{
+		if( !::CreateDirectory(appPath, &sa ) )
+		{
+			return FALSE;
+		}
+	}
+	_tcscat( appPath, _T("\\config.ini"));
+	if ( GetFileAttributes(appPath) == 0xFFFFFFFF )
+	{
+		HANDLE hFile = ::CreateFile( appPath, FILE_ALL_ACCESS, 0, &sa,  CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if ( hFile == INVALID_HANDLE_VALUE )
+		{
+			return FALSE;
+		}
+		CloseHandle(hFile);
+		return TRUE;
+	}
+	_tcscpy( pOutPath,appPath);
+	return TRUE;
+}
+
+BOOL GetVHDFilePath(const TCHAR *pCfgPath, TCHAR *pRecvVHDPath )
+{
+	if ( GetFileAttributes(pCfgPath) == 0xFFFFFFFF)
+	{
+		return FALSE;
+	}
+	TCHAR vhdPath[MAX_PATH] = {0};
+	GetPrivateProfileString( _T("CONFIG"), _T("FilePath"), _T("NULL"), vhdPath, MAX_PATH, pCfgPath );
+	if ( _tcscmp( vhdPath, _T("NULL") ) == 0 )
+	{
+		return FALSE;
+	}
+	_tcscpy( pRecvVHDPath, vhdPath );
+	return TRUE;
+}
+
+BOOL GetAutoStartFlag( const TCHAR *pPath)
+{
+	if ( GetFileAttributes(pPath) == 0xFFFFFFFF )
+	{
+		return FALSE;
+	}
+	if( 0 ==  GetPrivateProfileInt( _T("CONFIG"), _T("AutoMount"), 0, pPath ) )
+	{
+		return FALSE;
+	}
+	return TRUE;
+
+	//TCHAR flag[]
+	//GetPrivateProfileString( "CONFIG", L"AutoMount", L"0", )
+}
 
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -72,15 +143,19 @@ int _tmain(int argc, _TCHAR* argv[])
 
 DWORD WINAPI RecvProc( LPVOID lparam )
 {
+	OutputDebugString(L"RecvProc runn");
 	byte buf[512];
 	CPipeServer *pServer = (CPipeServer*)lparam;
 	CVHDManager manager;
+	TCHAR path[MAX_PATH] = {0};
+	int kk = -1;
 	while(1)
 	{
-		ZeroMemory( buf, 128);
-		int nRes = pServer->ReadData( buf, 128 );
+		ZeroMemory( buf, 512);
+		int nRes = pServer->ReadData( buf, 512 );
 		if ( nRes == 1 )
 		{
+			OutputDebugString(L"收到数据！ ");
 			//接收成功
 			int len = *((int*)buf);
 			CSerialBuffer_T serBuffer;
@@ -89,7 +164,64 @@ DWORD WINAPI RecvProc( LPVOID lparam )
 			serBuffer>>cmd;
 			switch(cmd)
 			{
-				
+			case 'M':
+				{
+					OutputDebugString(L"收到挂载消息！");
+					ZeroMemory(path,sizeof(TCHAR));
+					if ( !GetConfigFilePath(path) )
+					{
+						OutputDebugString(L"GetConfigFilePath fail");
+						CSerialBuffer_T sendBuf;
+						int len = 5;
+						int mRes = -1;
+						sendBuf<<len;
+						sendBuf<<'R';
+						sendBuf<<mRes;
+						pServer->WriteData((const byte*)sendBuf.GetBuffer(), sendBuf.Size());
+						break;
+					}
+					else
+					{
+						OutputDebugString(L"GetConfigFilePath suc");
+					}
+					TCHAR vhdPath[MAX_PATH] = {0};
+					if( !GetVHDFilePath(path, vhdPath) )
+					{
+						OutputDebugString(L"GetVHDFilePath fail");
+						CSerialBuffer_T sendBuf;
+						int len = 5;
+						int mRes = -2;
+						sendBuf<<len;
+						sendBuf<<'R';
+						sendBuf<<mRes;
+						pServer->WriteData((const byte*)sendBuf.GetBuffer(), sendBuf.Size());
+						break;
+					}
+					else
+					{
+						OutputDebugString(L"GetVHDFilePath suc");
+						if ( GetFileAttributes(vhdPath) == 0xFFFFFFFF )
+						{
+							OutputDebugString(L"vhdPath fail");
+							CSerialBuffer_T sendBuf;
+							int len = 5;
+							int mRes = -3;
+							sendBuf<<len;
+							sendBuf<<'R';
+							sendBuf<<mRes;
+							pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
+							break;
+						}
+						else
+						{
+							OutputDebugString(L"vhdPath fail");
+						}
+					}
+				}
+				break;
+			case 'U':
+				OutputDebugString(L"收到卸载消息！");
+				break;
 			}
 			//解包
 		}
@@ -97,9 +229,15 @@ DWORD WINAPI RecvProc( LPVOID lparam )
 		{
 			//未收到数据
 			Sleep(100);
+			kk++;
+			if ( kk%30 == 0 )
+			{
+				OutputDebugString(L"未收到数据");
+			}
 		}
 		else
 		{
+			OutputDebugString(L"连接断开！");
 			break;
 		}
 	}
@@ -108,7 +246,8 @@ DWORD WINAPI RecvProc( LPVOID lparam )
 void WINAPI Notify( int code, unsigned int param1)
 {
 	if ( code == 1 )
-	{
+	{	
+		OutputDebugString(L"NotifyRunning");
 		::CreateThread( NULL, 0, RecvProc, (LPVOID)param1, 0, NULL );
 	}
 }
@@ -148,6 +287,7 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 		}
 	}
 	OutputDebugString(L"111111111111");*/
+	int kk = 0;
 	while ( g_status.dwCurrentState != SERVICE_STOPPED )
 	{
 		if ( g_status.dwCurrentState == SERVICE_PAUSED )
@@ -155,7 +295,14 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 			Sleep(2000);
 			continue;
 		}
-		OutputDebugString(L"keep alive!");
+		kk++;
+		if ( kk%10 == 0)
+		{
+			OutputDebugString(L"keep alive!");
+		}
+
+		
+		
 		Sleep(1000);
 	}
 	/*OutputDebugString(L"ddddddddd");
