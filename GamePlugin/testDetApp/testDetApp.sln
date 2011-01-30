@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testDetApp", "testDetApp.vcproj", "{47D44863-F702-4619-8467-0641DBD10674}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{47D44863-F702-4619-8467-0641DBD10674}.Debug|Win32.ActiveCfg = Debug|Win32
+		{47D44863-F702-4619-8467-0641DBD10674}.Debug|Win32.Build.0 = Debug|Win32
+		{47D44863-F702-4619-8467-0641DBD10674}.Release|Win32.ActiveCfg = Release|Win32
+		{47D44863-F702-4619-8467-0641DBD10674}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
