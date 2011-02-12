@@ -12,6 +12,10 @@
 
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
+BOOL GetConfigFilePath(TCHAR *pOutPath);
+BOOL GetVHDFilePath(const TCHAR *pCfgPath, TCHAR *pRecvVHDPath );
+BOOL GetAutoStartFlag( const TCHAR *pPath);
+BOOL IsMounted(const TCHAR *pPath );
 
 class CAboutDlg : public CDialog
 {
@@ -58,6 +62,8 @@ void CClientDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_CHECK1, m_chkAutoMount);
+	DDX_Control(pDX, IDC_BTN_MOUNT, m_btnMount);
+	DDX_Control(pDX, IDC_BUTTON_SELECT, m_btnSelect);
 }
 
 BEGIN_MESSAGE_MAP(CClientDlg, CDialog)
@@ -67,7 +73,9 @@ BEGIN_MESSAGE_MAP(CClientDlg, CDialog)
 	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_BTN_MOUNT, &CClientDlg::OnBnClickedBtnMount)
 	ON_BN_CLICKED(IDC_CHECK1, &CClientDlg::OnBnClickedCheck1)
-	ON_BN_CLICKED(IDC_BTN_TESTSEND, &CClientDlg::OnBnClickedBtnTestsend)
+	ON_BN_CLICKED(IDC_BUTTON_SELECT, &CClientDlg::OnBnClickedButtonSelect)
+	ON_BN_CLICKED(IDC_BUTTON1, &CClientDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON2, &CClientDlg::OnBnClickedButton2)
 END_MESSAGE_MAP()
 
 
@@ -83,11 +91,52 @@ DWORD WINAPI RecvProc( LPVOID lparam )
 		if ( nRes == 1 )
 		{
 			int len = *((int*)buf);
+
 			CSerialBuffer_T slBuf;
 			slBuf.WriteData((char*)buf+4, len);
 			char cmd;
 			slBuf>>cmd;
-			slBuf>>len;
+			switch (cmd)
+			{
+				case 'R':
+					{
+						int res;
+						slBuf>>res;
+						if ( res == 1 )
+						{
+							g_pDlg->MessageBox(L"挂载成功！");
+							g_pDlg->SetDlgItemText(IDC_BTN_MOUNT, L"卸载");
+							g_pDlg->m_btnMount.EnableWindow(TRUE);
+						}
+						else
+						{
+							g_pDlg->MessageBox(L"挂载失败！");
+							g_pDlg->m_btnSelect.EnableWindow(TRUE);
+							g_pDlg->m_btnMount.EnableWindow(TRUE);
+							g_pDlg->SetDlgItemText(IDC_BTN_MOUNT, L"挂载");
+						}
+					}
+					break;
+				case 'S':
+					{
+						int res;
+						slBuf>>res;
+						if ( res == 1 )
+						{
+							g_pDlg->MessageBox(L"卸载成功！");
+							g_pDlg->m_btnSelect.EnableWindow(TRUE);
+							g_pDlg->m_btnMount.EnableWindow(TRUE);
+							g_pDlg->SetDlgItemText(IDC_BTN_MOUNT, L"挂载");
+						}
+						else
+						{
+							g_pDlg->MessageBox(L"卸载失败！");
+							g_pDlg->SetDlgItemText(IDC_BTN_MOUNT, L"卸载");
+							g_pDlg->m_btnMount.EnableWindow(TRUE);
+						}
+					}
+					break;
+			}
 		}
 		else if ( nRes == 0 )
 		{
@@ -135,6 +184,38 @@ BOOL CClientDlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 
+	ZeroMemory( m_cfgPath, sizeof(TCHAR)*MAX_PATH );
+	if( GetConfigFilePath(m_cfgPath) )
+	{
+		TCHAR vhdPath[MAX_PATH] = {0};
+		if( GetVHDFilePath( m_cfgPath, vhdPath) )
+		{
+			if ( GetFileAttributes(vhdPath) != 0xFFFFFFFF )
+			{
+				SetDlgItemText( IDC_EDIT_FILE, vhdPath );
+			}
+			
+		}
+
+		if ( IsMounted(m_cfgPath) )
+		{
+			GetDlgItem(IDC_BTN_MOUNT)->SetWindowText(L"卸载");
+			m_btnSelect.EnableWindow(FALSE);
+		}
+		else
+		{
+			GetDlgItem(IDC_BTN_MOUNT)->SetWindowText(L"挂载");
+		}
+
+		if ( GetAutoStartFlag(m_cfgPath) )
+		{
+			m_chkAutoMount.SetCheck( BST_CHECKED );
+		}
+		else
+		{
+			m_chkAutoMount.SetCheck(BST_UNCHECKED);
+		}
+	}
 	
 	
 	::CreateThread( NULL, 0, RecvProc, NULL, 0, NULL );
@@ -189,6 +270,18 @@ void CClientDlg::OnPaint()
 HCURSOR CClientDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
+}
+BOOL IsMounted(const TCHAR *pPath )
+{
+	if ( GetFileAttributes(pPath) == 0xFFFFFFFF )
+	{
+		return FALSE;
+	}
+	if( 0 ==  GetPrivateProfileInt( _T("CONFIG"), _T("IsMounted"), 0, pPath ) )
+	{
+		return FALSE;
+	}
+	return TRUE;
 }
 
 BOOL GetConfigFilePath(TCHAR *pOutPath)
@@ -285,35 +378,67 @@ BOOL GetVHDFilePath(const TCHAR *pCfgPath, TCHAR *pRecvVHDPath )
 	_tcscpy( pRecvVHDPath, vhdPath );
 	return TRUE;
 }
+
+
+
 void CClientDlg::OnBnClickedBtnMount()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	TCHAR path[MAX_PATH] = {0};
-	if( GetConfigFilePath(path) )
+	//TCHAR path[MAX_PATH] = {0};
+	//if( GetConfigFilePath(path) )
+	//{
+	//	MessageBox(L"success");
+	//}
+	//else
+	//{
+	//	return;
+	//}
+	////if ( SetAutoStartFlag(path,TRUE))
+	////{
+	////	MessageBox(L"设置auto success");
+	////}
+	////if ( SetVHDFilePath(path, L"d:\\kkk.vhd"))
+	////{
+	////	MessageBox(L"设置file success!");
+	////}
+	//if ( GetAutoStartFlag(path))
+	//{
+	//	MessageBox(L"自动");
+	//}
+	//TCHAR newPath[MAX_PATH] = {0};
+	//if ( GetVHDFilePath(path, newPath) )
+	//{
+	//	MessageBox(newPath);
+	//}
+	CString strPath;
+	GetDlgItemText( IDC_EDIT_FILE, strPath);
+	if ( strPath.IsEmpty() )
 	{
-		MessageBox(L"success");
+		MessageBox(L"请首先选择要挂载的文件！");
+		return;
+	}
+
+	CString strBtnTxt;
+	GetDlgItemText(IDC_BTN_MOUNT, strBtnTxt);
+	CSerialBuffer_T slBuf;
+	int len = 1;
+	slBuf<<len;
+	if ( strBtnTxt == L"挂载")
+	{
+		slBuf<<'M';
+		m_btnMount.EnableWindow(FALSE);
+		m_btnSelect.EnableWindow(FALSE);
+		m_btnMount.SetWindowText(L"正在挂载...");
 	}
 	else
 	{
-		return;
+		slBuf<<'U';
+		m_btnMount.EnableWindow(FALSE);
+		m_btnSelect.EnableWindow(FALSE);
+		m_btnMount.SetWindowText(L"正在卸载...");
 	}
-	//if ( SetAutoStartFlag(path,TRUE))
-	//{
-	//	MessageBox(L"设置auto success");
-	//}
-	//if ( SetVHDFilePath(path, L"d:\\kkk.vhd"))
-	//{
-	//	MessageBox(L"设置file success!");
-	//}
-	if ( GetAutoStartFlag(path))
-	{
-		MessageBox(L"自动");
-	}
-	TCHAR newPath[MAX_PATH] = {0};
-	if ( GetVHDFilePath(path, newPath) )
-	{
-		MessageBox(newPath);
-	}
+	
+	theApp.m_pipeClient.WriteData((const byte*)slBuf.GetBuffer(), 512 );
 }
 
 void CClientDlg::OnBnClickedCheck1()
@@ -343,14 +468,48 @@ void CClientDlg::OnBnClickedCheck1()
 			return;
 		}
 	}
+
 }
 
-void CClientDlg::OnBnClickedBtnTestsend()
+
+
+void CClientDlg::OnBnClickedButtonSelect()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	CSerialBuffer_T slBuf;
-	int len = 1;
-	slBuf<<len;
-	slBuf<<'M';
-	theApp.m_pipeClient.WriteData((const byte*)slBuf.GetBuffer(), 512 );
+	CFileDialog fDlg(TRUE, L".vhd", NULL, OFN_OVERWRITEPROMPT, L"VHD文件(*.vhd)|*.vhd||", this);
+	if( fDlg.DoModal() == IDOK)
+	{
+		CString strFilePath = fDlg.GetPathName();
+		if ( SetVHDFilePath(m_cfgPath, strFilePath ) )
+		{
+			SetDlgItemText(IDC_EDIT_FILE, strFilePath );
+		}
+	}
+	
+}
+
+//加密VHD
+void CClientDlg::OnBnClickedButton1()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	vector<CString> vecVhdPath;
+	CFileFind fFind;
+	if( !fFind.FindFile(L"*.vhd") )
+	{
+		fFind.Close();
+		MessageBox(L"未找到vhd文件！");
+		return;
+	}
+	while ( fFind.FindNextFile() )
+	{
+		vecVhdPath.push_back(fFind.GetFilePath());
+	}
+	vecVhdPath.push_back(fFind.GetFilePath());
+	fFind.Close();
+}
+
+//解密VHD
+void CClientDlg::OnBnClickedButton2()
+{
+	// TODO: 在此添加控件通知处理程序代码
 }

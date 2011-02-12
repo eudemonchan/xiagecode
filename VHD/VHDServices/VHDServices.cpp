@@ -19,8 +19,9 @@ int InstallService(TCHAR * pszServicePath, TCHAR * pszServiceName,TCHAR * pszDis
 int UninstallService(TCHAR * pszServiceName);
 //卸载驱动程序  
 BOOL UnloadNTDriver( TCHAR * szSvrName );
-TCHAR szServiceName[] = L"XiageSendIPService";
-TCHAR szDisplayName[] = L"IpSend";
+TCHAR szServiceName[] = L"XGVHD";
+TCHAR szDisplayName[] = L"VHDMountService";
+CVHDManager g_manager;
 
 BOOL GetConfigFilePath(TCHAR *pOutPath)
 {
@@ -92,6 +93,36 @@ BOOL GetAutoStartFlag( const TCHAR *pPath)
 	//GetPrivateProfileString( "CONFIG", L"AutoMount", L"0", )
 }
 
+BOOL IsMounted(const TCHAR *pPath )
+{
+	if ( GetFileAttributes(pPath) == 0xFFFFFFFF )
+	{
+		return FALSE;
+	}
+	if( 0 ==  GetPrivateProfileInt( _T("CONFIG"), _T("IsMounted"), 0, pPath ) )
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOL SetMounted(const TCHAR *pPath, BOOL bMounted )
+{
+	if ( GetFileAttributes(pPath) == 0xFFFFFFFF )
+	{
+		return FALSE;
+	}
+	if ( bMounted )
+	{
+		return WritePrivateProfileString( _T("CONFIG"), _T("IsMounted"), _T("1"), pPath );
+	}
+	else
+	{
+		return WritePrivateProfileString( _T("CONFIG"), _T("IsMounted"), _T("0"), pPath );
+	}
+	return TRUE;
+}
+
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -143,10 +174,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 DWORD WINAPI RecvProc( LPVOID lparam )
 {
-	OutputDebugString(L"RecvProc runn");
+	//OutputDebugString(L"RecvProc runn");
 	byte buf[512];
 	CPipeServer *pServer = (CPipeServer*)lparam;
-	CVHDManager manager;
 	TCHAR path[MAX_PATH] = {0};
 	int kk = -1;
 	while(1)
@@ -155,7 +185,7 @@ DWORD WINAPI RecvProc( LPVOID lparam )
 		int nRes = pServer->ReadData( buf, 512 );
 		if ( nRes == 1 )
 		{
-			OutputDebugString(L"收到数据！ ");
+			//OutputDebugString(L"收到数据！ ");
 			//接收成功
 			int len = *((int*)buf);
 			CSerialBuffer_T serBuffer;
@@ -166,61 +196,187 @@ DWORD WINAPI RecvProc( LPVOID lparam )
 			{
 			case 'M':
 				{
-					OutputDebugString(L"收到挂载消息！");
+					//OutputDebugString(L"收到挂载消息！");
 					ZeroMemory(path,sizeof(TCHAR));
 					if ( !GetConfigFilePath(path) )
 					{
-						OutputDebugString(L"GetConfigFilePath fail");
+						//OutputDebugString(L"GetConfigFilePath fail");
 						CSerialBuffer_T sendBuf;
 						int len = 5;
 						int mRes = -1;
 						sendBuf<<len;
 						sendBuf<<'R';
 						sendBuf<<mRes;
-						pServer->WriteData((const byte*)sendBuf.GetBuffer(), sendBuf.Size());
+						pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
 						break;
 					}
 					else
 					{
-						OutputDebugString(L"GetConfigFilePath suc");
+						//OutputDebugString(L"GetConfigFilePath suc");
+					}
+
+					if ( IsMounted(path) )
+					{
+						CSerialBuffer_T sendBuf;
+						int len = 5;
+						int mRes = -6;
+						sendBuf<<len;
+						sendBuf<<'R';
+						sendBuf<<mRes;
+						pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
+						break;
 					}
 					TCHAR vhdPath[MAX_PATH] = {0};
 					if( !GetVHDFilePath(path, vhdPath) )
 					{
-						OutputDebugString(L"GetVHDFilePath fail");
+						//OutputDebugString(L"GetVHDFilePath fail");
 						CSerialBuffer_T sendBuf;
 						int len = 5;
 						int mRes = -2;
 						sendBuf<<len;
 						sendBuf<<'R';
 						sendBuf<<mRes;
-						pServer->WriteData((const byte*)sendBuf.GetBuffer(), sendBuf.Size());
+						pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
 						break;
 					}
-					else
+					//OutputDebugString(L"GetVHDFilePath suc");
+					if ( GetFileAttributes(vhdPath) == 0xFFFFFFFF )
 					{
-						OutputDebugString(L"GetVHDFilePath suc");
-						if ( GetFileAttributes(vhdPath) == 0xFFFFFFFF )
+						//OutputDebugString(L"vhdPath fail");
+						CSerialBuffer_T sendBuf;
+						int len = 5;
+						int mRes = -3;
+						sendBuf<<len;
+						sendBuf<<'R';
+						sendBuf<<mRes;
+						pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
+						break;
+					}
+					//g_manager.UnMountDisk();
+					//g_manager.ReleaseService();
+					if ( g_manager.ConnectDiskService() )
+					{
+						if ( g_manager.MountDisk(vhdPath))
 						{
-							OutputDebugString(L"vhdPath fail");
+							g_manager.SetMultipleInterface();
+							//OutputDebugString(L"mount succeed!");
+
+							SetMounted(path,TRUE);
 							CSerialBuffer_T sendBuf;
 							int len = 5;
-							int mRes = -3;
+							int mRes = 1;
+							sendBuf<<len;
+							sendBuf<<'R';
+							sendBuf<<mRes;
+							pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
+							break;
+
+						}
+						else
+						{
+							//OutputDebugString(L"manager.Attach() fail!");
+							g_manager.ReleaseService();
+							CSerialBuffer_T sendBuf;
+							int len = 5;
+							int mRes = -5;
 							sendBuf<<len;
 							sendBuf<<'R';
 							sendBuf<<mRes;
 							pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
 							break;
 						}
-						else
-						{
-							OutputDebugString(L"vhdPath fail");
-						}
 					}
+					else
+					{
+						//OutputDebugString(L"manager.Open() fail");
+						CSerialBuffer_T sendBuf;
+						int len = 5;
+						int mRes = -4;
+						sendBuf<<len;
+						sendBuf<<'R';
+						sendBuf<<mRes;
+						pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
+						break;
+					}
+					
 				}
 				break;
 			case 'U':
-				OutputDebugString(L"收到卸载消息！");
+				{
+
+					if( g_manager.UnMountDisk() )
+					{
+						//OutputDebugString(L"卸载成功！");
+						g_manager.ReleaseService();
+						if( GetConfigFilePath(path) )
+						{
+							SetMounted(path, FALSE);
+						}
+						
+						CSerialBuffer_T sendBuf;
+						int len = 5;
+						int mRes = 1;
+						sendBuf<<len;
+						sendBuf<<'S';
+						sendBuf<<mRes;
+						pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
+						break;
+					}
+					else
+					{
+						//OutputDebugString(L"卸载失败！");
+						CSerialBuffer_T sendBuf;
+						int len = 5;
+						int mRes = -1;
+						sendBuf<<len;
+						sendBuf<<'S';
+						sendBuf<<mRes;
+						pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
+						break;
+					}
+				//	//OutputDebugString(L"收到卸载消息！");
+				//	ZeroMemory(path,sizeof(TCHAR));
+				//	if ( !GetConfigFilePath(path) )
+				//	{
+				//		//OutputDebugString(L"GetConfigFilePath fail");
+				//		CSerialBuffer_T sendBuf;
+				//		int len = 5;
+				//		int mRes = -1;
+				//		sendBuf<<len;
+				//		sendBuf<<'S';
+				//		sendBuf<<mRes;
+				//		pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
+				//		break;
+				//	}
+				///*	CVHDManager manager2;
+				//	TCHAR vhdPath[MAX_PATH] = {0};
+				//	GetVHDFilePath(path,vhdPath);
+				//	manager2.Open(vhdPath);*/
+				//	if ( ERROR_SUCCESS != manager.Detach() )
+				//	{
+				//		//OutputDebugString(L"卸载失败！");
+				//		CSerialBuffer_T sendBuf;
+				//		int len = 5;
+				//		int mRes = -2;
+				//		sendBuf<<len;
+				//		sendBuf<<'S';
+				//		sendBuf<<mRes;
+				//		pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
+				//		break;
+				//	}
+				//	//OutputDebugString(L"卸载成功！");
+				//	SetMounted(path, FALSE);
+				//	manager.Close();
+				//	CSerialBuffer_T sendBuf;
+				//	int len = 5;
+				//	int mRes = 1;
+				//	sendBuf<<len;
+				//	sendBuf<<'S';
+				//	sendBuf<<mRes;
+				//	pServer->WriteData((const byte*)sendBuf.GetBuffer(), 512);
+				//	break;
+				}
+				
 				break;
 			}
 			//解包
@@ -232,12 +388,12 @@ DWORD WINAPI RecvProc( LPVOID lparam )
 			kk++;
 			if ( kk%30 == 0 )
 			{
-				OutputDebugString(L"未收到数据");
+				//OutputDebugString(L"未收到数据");
 			}
 		}
 		else
 		{
-			OutputDebugString(L"连接断开！");
+			//OutputDebugString(L"连接断开！");
 			break;
 		}
 	}
@@ -247,7 +403,7 @@ void WINAPI Notify( int code, unsigned int param1)
 {
 	if ( code == 1 )
 	{	
-		OutputDebugString(L"NotifyRunning");
+		//OutputDebugString(L"NotifyRunning");
 		::CreateThread( NULL, 0, RecvProc, (LPVOID)param1, 0, NULL );
 	}
 }
@@ -256,7 +412,7 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 {
 	g_hServiceStatus = RegisterServiceCtrlHandler(szServiceName, HandlerProc);
 
-	OutputDebugString(L"进入ServiceMain");
+	//OutputDebugString(L"进入ServiceMain");
 	if(g_hServiceStatus == NULL)
 	{
 		return;
@@ -264,7 +420,7 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 	CPipeServer pipeServer;
 	if ( !pipeServer.StartServer(L"VHD_Service_123456", Notify))
 	{
-		OutputDebugString(L"启动管道监听服务失败！");
+		//OutputDebugString(L"启动管道监听服务失败！");
 		return;
 	}
 
@@ -280,13 +436,47 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 
 	if( manager.Open(L"H:\\201119\\myvhd.vhd") == ERROR_SUCCESS )
 	{
-		OutputDebugString(L"open成功！");
+		//OutputDebugString(L"open成功！");
 		if(manager.Attach()==ERROR_SUCCESS)
 		{
-			OutputDebugString(L"attach成功！");
+			//OutputDebugString(L"attach成功！");
 		}
 	}
-	OutputDebugString(L"111111111111");*/
+	//OutputDebugString(L"111111111111");*/
+	TCHAR cfgPath[MAX_PATH] = {0};
+	if ( GetConfigFilePath(cfgPath) )
+	{
+		if ( GetAutoStartFlag(cfgPath) )
+		{
+			TCHAR vhdPath[MAX_PATH] = {0};
+			if ( GetVHDFilePath(cfgPath, vhdPath ) )
+			{
+				if ( GetFileAttributes(vhdPath) != 0xFFFFFFFF )
+				{
+					/*CVHDManager manager;
+					if ( ERROR_SUCCESS == manager.Open(vhdPath) )
+					{
+						if ( ERROR_SUCCESS == manager.Attach() )
+						{
+							SetMounted(cfgPath,TRUE);
+						}
+						else
+						{
+							SetMounted(cfgPath,FALSE);
+						}
+					}*/
+					if ( g_manager.ConnectDiskService() )
+					{
+						if ( g_manager.MountDisk(vhdPath))
+						{
+							g_manager.SetMultipleInterface();
+							SetMounted(cfgPath, TRUE);
+						}
+					}
+				}
+			}
+		}
+	}
 	int kk = 0;
 	while ( g_status.dwCurrentState != SERVICE_STOPPED )
 	{
@@ -298,23 +488,23 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 		kk++;
 		if ( kk%10 == 0)
 		{
-			OutputDebugString(L"keep alive!");
+			//OutputDebugString(L"keep alive!");
 		}
 
 		
 		
 		Sleep(1000);
 	}
-	/*OutputDebugString(L"ddddddddd");
+	/*//OutputDebugString(L"ddddddddd");
 	if( manager.Detach() == ERROR_SUCCESS )
 	{
-		OutputDebugString(L"detach成功！");
+		//OutputDebugString(L"detach成功！");
 	}
 	else
 	{
 		TCHAR errorinfo[100] = {0};
 		wsprintf( errorinfo, L"detach错误码：%d", GetLastError());
-		OutputDebugString(errorinfo);
+		//OutputDebugString(errorinfo);
 	}
 	manager.Close();*/
 	g_status.dwCurrentState = SERVICE_STOPPED;
@@ -323,11 +513,18 @@ VOID WINAPI ServiceMain( DWORD dwArgc, LPTSTR* lpszArgv )
 
 VOID WINAPI HandlerProc(DWORD fdwControl)
 {
+	TCHAR path[MAX_PATH] = {0};
 	switch (fdwControl)
 	{
 	case SERVICE_CONTROL_STOP:
 		g_status.dwCurrentState = SERVICE_STOPPED;
-		OutputDebugString(L"服务停止！");
+		//OutputDebugString(L"服务停止！");
+		if( GetConfigFilePath(path) )
+		{
+			SetMounted(path, FALSE);
+			g_manager.UnMountDisk();
+			g_manager.ReleaseService();
+		}
 		SetServiceStatus(g_hServiceStatus, &g_status);
 		break;
 	case SERVICE_CONTROL_CONTINUE:

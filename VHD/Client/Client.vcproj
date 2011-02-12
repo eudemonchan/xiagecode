@@ -198,6 +198,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GetPassDlg.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -232,6 +236,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GetPassDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\md5.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\md5.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ProcessBridge.cpp"
 				>
 			</File>
@@ -249,6 +265,14 @@
 			</File>
 			<File
 				RelativePath=".\SerialBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Sms4c.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Sms4c.h"
 				>
 			</File>
 			<File

@@ -3,6 +3,9 @@
 
 #pragma once
 #include "afxwin.h"
+#include <vector>
+
+using namespace std;
 
 
 // CClientDlg ¶Ô»°¿ò
@@ -35,6 +38,12 @@ public:
 	afx_msg void OnBnClickedCheck1();
 public:
 	CButton m_chkAutoMount;
+	TCHAR m_cfgPath[MAX_PATH];
+	afx_msg void OnBnClickedButtonSelect();
+	CButton m_btnMount;
+	CButton m_btnSelect;
 public:
-	afx_msg void OnBnClickedBtnTestsend();
+	afx_msg void OnBnClickedButton1();
+public:
+	afx_msg void OnBnClickedButton2();
 };

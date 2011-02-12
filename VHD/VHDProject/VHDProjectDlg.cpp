@@ -232,9 +232,9 @@ void CVHDProjectDlg::OnBnClickedBtnStart()
 	//}
 	//MessageBox(L"Ê§°Ü");
 	m_vhd.ConnectDiskService();
-	m_vhd.MountDisk(L"e:\\33.vhd");
-	m_vhd.UnMountDisk();
-	m_vhd.ReleaseService();
+	m_vhd.MountDisk(L"g:\\MyVhd.vhd");
+	//m_vhd.UnMountDisk();
+	//m_vhd.ReleaseService();
 }
 
 
@@ -437,7 +437,7 @@ void CVHDProjectDlg::OnBnClickedBtnMount()
 	// TODO: Add your control notification handler code here
 	if ( m_vhd.ConnectDiskService() )
 	{
-		if ( m_vhd.MountDisk(L"E:\\33.vhd"))
+		if ( m_vhd.MountDisk(L"G:\\MyVhd.vhd"))
 		{
 			if ( m_vhd.SetMultipleInterface())
 			{

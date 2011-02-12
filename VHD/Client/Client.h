@@ -24,6 +24,12 @@ public:
 	virtual BOOL InitInstance();
 	CPipeClient m_pipeClient;
 
+	void CreateKeyFile(byte *pData, int len);
+	void WriteFileData( CString strFile, byte *data, int len);
+	int ReadFileData(CString strFile, byte *data);
+	void GetFirstMd5FromString(CString str, byte *pOutMd5 );
+	void GetSecondMd5FromString(CString str, byte *pOutMd5 );
+
 // й╣ож
 
 	DECLARE_MESSAGE_MAP()

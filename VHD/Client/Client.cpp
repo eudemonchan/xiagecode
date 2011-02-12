@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "Client.h"
 #include "ClientDlg.h"
+#include "md5.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -81,4 +82,43 @@ BOOL CClientApp::InitInstance()
 	// 由于对话框已关闭，所以将返回 FALSE 以便退出应用程序，
 	//  而不是启动应用程序的消息泵。
 	return FALSE;
+}
+void CClientApp::CreateKeyFile(byte *pData, int len)
+{
+	CFile file;
+	file.Open( L"key.dat", CFile::modeCreate | CFile::modeWrite );
+	file.Write( pData, len);
+	file.Close();
+}
+void CClientApp::GetFirstMd5FromString(CString str, byte *pOutMd5 )
+{
+	MD5_CTX md5;
+	//byte md5first[16] = {0};
+	md5.MD5Data( (byte*)str.GetBuffer(), str.GetLength()*2, pOutMd5);
+	
+}
+
+void CClientApp::GetSecondMd5FromString(CString str, byte *pOutMd5 )
+{
+	MD5_CTX md5;
+	byte md5first[16] = {0};
+	md5.MD5Data( (byte*)str.GetBuffer(), str.GetLength()*2, md5first);
+	md5.MD5Data( md5first, 16, pOutMd5);
+}
+void CClientApp::WriteFileData( CString strFile, byte *data, int len)
+{
+	CFile file;
+	file.Open( strFile, CFile::modeCreate | CFile::modeWrite );
+	file.Write( data, len);
+	file.Close();
+}
+
+int CClientApp::ReadFileData(CString strFile, byte *data)
+{
+	CFile file;
+	file.Open( strFile, CFile::modeRead );
+	ULONG len = file.GetLength();
+	file.Read( data, len );
+	file.Close();
+	return len;
 }
